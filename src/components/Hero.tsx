@@ -21,10 +21,7 @@ export default function Hero() {
           poster="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1920&q=80"
           className="w-full h-full object-cover"
         >
-          <source
-            src="https://videos.pexels.com/video-files/2888567/2888567-hd_1920_1080_30fps.mp4"
-            type="video/mp4"
-          />
+          <source src="/hero-bg.mp4" type="video/mp4" />
         </video>
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A2E]/88 via-[#2D1B3D]/82 to-[#1a0a2e]/90" />
