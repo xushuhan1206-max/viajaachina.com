@@ -1,9 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const QUICK_QUESTIONS = [
+  "¿Necesito visa para China?",
+  "¿Cómo pago en China?",
+  "Ruta 7 días Beijing + Xi'an",
+  "¿Cómo comprar billetes de tren?",
+];
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function sendMessage(text?: string) {
+    const msg = text || input.trim();
+    if (!msg || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: msg };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("API error");
+      }
+
+      // Stream response
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+
+      setMessages([...newMessages, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        assistantContent += decoder.decode(value);
+        setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
+      }
+    } catch {
+      setMessages([
+        ...newMessages,
+        {
+          role: "assistant",
+          content: "Lo siento, hubo un error al conectar con el asistente. Por favor, intenta de nuevo.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <>
@@ -13,8 +84,7 @@ export default function ChatWidget() {
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-[999] w-14 h-14 rounded-full bg-[#C62828] shadow-[0_4px_20px_rgba(198,40,40,0.4)] flex items-center justify-center hover:scale-110 transition-transform"
         >
-          {/* Pulse ring */}
-          <span className="absolute inset-[-4px] rounded-full border-2 border-[#C62828] animate-ping opacity-60" />
+          <span className="absolute inset-[-4px] rounded-full border-2 border-[#C62828] animate-ping opacity-50" />
           <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white relative z-10">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
             <path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z" />
@@ -24,9 +94,9 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[999] w-[360px] max-w-[calc(100vw-24px)] h-[480px] max-h-[70vh] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-[999] w-[380px] max-w-[calc(100vw-24px)] h-[520px] max-h-[75vh] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-[#1A1A2E] px-4 py-3 flex items-center gap-3">
+          <div className="bg-[#1A1A2E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-3 h-3 rounded-full bg-[#C62828]" />
             <span className="text-white text-sm font-semibold flex-1">ViajaAChina AI</span>
             <button
@@ -37,48 +107,81 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* Body */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            {/* AI Welcome */}
-            <div className="flex gap-2 mb-3">
-              <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-[10px] font-bold">AI</span>
-              </div>
-              <div className="bg-gray-100 rounded-xl rounded-tl-sm px-3 py-2 text-[13px] max-w-[85%]">
-                <p className="font-medium mb-1">¡Hola! 👋 Soy tu asistente de viaje para China.</p>
-                <p className="text-gray-600">Puedo ayudarte con:</p>
-                <ul className="text-gray-600 mt-1 list-disc list-inside text-[12px]">
-                  <li>Planificar rutas personalizadas</li>
-                  <li>Dudas sobre visa y pagos</li>
-                  <li>Recomendar ciudades y actividades</li>
-                  <li>Información de transporte</li>
-                </ul>
-                <p className="mt-2">¿Qué te gustaría saber?</p>
-              </div>
-            </div>
+          {/* Messages */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-3">
+            {/* Welcome message (if no messages) */}
+            {messages.length === 0 && (
+              <>
+                <div className="flex gap-2">
+                  <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-[10px] font-bold">AI</span>
+                  </div>
+                  <div className="bg-gray-100 rounded-xl rounded-tl-sm px-3 py-2 text-[13px] max-w-[85%]">
+                    <p className="font-medium mb-1">¡Hola! 👋 Soy tu asistente para viajar a China.</p>
+                    <p className="text-gray-600 text-[12px]">
+                      Puedo ayudarte con rutas, visa, pagos, transporte y más. ¿Qué necesitas saber?
+                    </p>
+                  </div>
+                </div>
+                {/* Quick questions */}
+                <div className="flex flex-wrap gap-1.5 ml-9">
+                  {QUICK_QUESTIONS.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => sendMessage(q)}
+                      className="bg-[#FFB300]/10 text-[#8B6914] text-[11px] px-2.5 py-1 rounded-full border border-[#FFB300]/20 cursor-pointer hover:bg-[#FFB300]/20 transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
-            {/* Quick suggestions */}
-            <div className="flex flex-wrap gap-1.5 ml-9">
-              {["¿Necesito visa?", "Ruta 7 días", "¿Cómo pago?"].map((q) => (
-                <span
-                  key={q}
-                  className="bg-[#FFB300]/10 text-[#B37A00] text-[11px] px-2.5 py-1 rounded-full border border-[#FFB300]/20 cursor-pointer hover:bg-[#FFB300]/20 transition-colors"
+            {/* Chat messages */}
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}>
+                {msg.role === "assistant" && (
+                  <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-[10px] font-bold">AI</span>
+                  </div>
+                )}
+                <div
+                  className={`rounded-xl px-3 py-2 text-[13px] max-w-[80%] whitespace-pre-wrap ${
+                    msg.role === "user"
+                      ? "bg-[#EEEDFE] text-[#1A1A2E] rounded-tr-sm"
+                      : "bg-gray-100 rounded-tl-sm"
+                  }`}
                 >
-                  {q}
-                </span>
-              ))}
-            </div>
+                  {msg.content || (isLoading && i === messages.length - 1 ? "..." : "")}
+                </div>
+                {msg.role === "user" && (
+                  <div className="w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-[10px] font-bold">TÚ</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-200 px-3 py-2.5 flex gap-2">
+          <div className="border-t border-gray-200 px-3 py-2.5 flex gap-2 flex-shrink-0">
             <input
               type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Escribe tu pregunta..."
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#C62828] transition-colors"
+              disabled={isLoading}
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#C62828] transition-colors disabled:opacity-50"
             />
-            <button className="bg-[#C62828] text-white rounded-lg px-3 py-2 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors">
-              Enviar
+            <button
+              onClick={() => sendMessage()}
+              disabled={isLoading || !input.trim()}
+              className="bg-[#C62828] text-white rounded-lg px-3 py-2 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors disabled:opacity-50"
+            >
+              {isLoading ? "..." : "Enviar"}
             </button>
           </div>
         </div>
