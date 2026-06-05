@@ -13,18 +13,18 @@ export interface City {
 // Each image chosen for the city's most iconic landmark/scene
 export const cities: City[] = [
   // Popular cities
-  { id: "shanghai", name: "Shanghai", desc: "936M turistas/año — La más visitada de China", badge: "👑 #1", image: "https://images.unsplash.com/photo-1474181628621-e88b6b5b3dc9?w=600&h=400&fit=crop", lat: 31.23, lng: 121.47, category: "popular" },
-  // ^ Shanghai Pudong skyline at night from the Bund
-  { id: "beijing", name: "Beijing (Pekín)", desc: "Historia imperial: Muralla + Ciudad Prohibida", badge: "🔥 Clásica", image: "https://images.unsplash.com/photo-1584266032559-fe11e819d25b?w=600&h=400&fit=crop", lat: 39.90, lng: 116.40, category: "popular" },
-  // ^ Great Wall of China stretching across mountains
-  { id: "guangzhou", name: "Guangzhou (Cantón)", desc: "320M visitantes — Capital del dim sum", image: "https://images.unsplash.com/photo-1583996046784-54b30e6d9fce?w=600&h=400&fit=crop", lat: 23.13, lng: 113.26, category: "popular" },
-  // ^ Canton Tower / Guangzhou skyline at night
+  { id: "shanghai", name: "Shanghai", desc: "936M turistas/año — La más visitada de China", badge: "👑 #1", image: "/cities/shanghai.jpg", lat: 31.23, lng: 121.47, category: "popular" },
+  // ^ Pudong skyline night (custom photo by Li Yang)
+  { id: "beijing", name: "Beijing (Pekín)", desc: "Historia imperial: Muralla + Ciudad Prohibida", badge: "🔥 Clásica", image: "/cities/beijing.jpg", lat: 39.90, lng: 116.40, category: "popular" },
+  // ^ Forbidden City red walls (custom photo by Peter Zhou)
+  { id: "guangzhou", name: "Guangzhou (Cantón)", desc: "320M visitantes — Capital del dim sum", image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&h=400&fit=crop", lat: 23.13, lng: 113.26, category: "popular" },
+  // ^ Cantonese dim sum / yum cha spread
   { id: "shenzhen", name: "Shenzhen", desc: "Ciudad tech: drones, AI, gadgets futuristas", badge: "🤖 Tech", image: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=600&h=400&fit=crop", lat: 22.54, lng: 114.06, category: "popular" },
   // ^ Shenzhen modern skyline / tech city
   { id: "chengdu", name: "Chengdu", desc: "Pandas + Hot pot + Vida relajada", badge: "🐼 Pandas", image: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=600&h=400&fit=crop", lat: 30.57, lng: 104.07, category: "popular" },
   // ^ Giant panda eating bamboo (iconic Chengdu symbol)
-  { id: "xian", name: "Xi'an", desc: "Guerreros de terracota + Hanfu + Ruta de la Seda", image: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&h=400&fit=crop", lat: 34.26, lng: 108.94, category: "popular" },
-  // ^ Terracotta Warriors / Xi'an city wall at night
+  { id: "xian", name: "Xi'an", desc: "Guerreros de terracota + Hanfu + Ruta de la Seda", image: "/cities/xian.jpg", lat: 34.26, lng: 108.94, category: "popular" },
+  // ^ Xi'an city wall and moat at dusk (custom photo by zyan1226)
   { id: "chongqing", name: "Chongqing", desc: "Ciudad cyberpunk 8D — Hot pot extremo", badge: "🌃 Viral", image: "https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=600&h=400&fit=crop", lat: 29.56, lng: 106.55, category: "popular" },
   // ^ Chongqing Hongya Cave / night cityscape
   { id: "hangzhou", name: "Hangzhou", desc: "Lago del Oeste + Té + Sede de Alibaba", image: "https://images.unsplash.com/photo-1592919505780-303950717480?w=600&h=400&fit=crop", lat: 30.27, lng: 120.15, category: "popular" },
