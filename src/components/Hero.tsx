@@ -70,6 +70,17 @@ export default function Hero() {
             </span>
           ))}
         </div>
+
+        {/* Route Planner CTA Button */}
+        <button
+          onClick={() => {
+            const event = new CustomEvent("openRoutePlanner");
+            window.dispatchEvent(event);
+          }}
+          className="mt-5 w-full md:w-auto px-6 py-3 bg-[#FFB300] text-[#1A1A2E] font-semibold text-sm rounded-xl hover:bg-[#FFC107] transition-colors shadow-lg shadow-[#FFB300]/20 flex items-center justify-center gap-2"
+        >
+          ✨ Planificar mi ruta con IA
+        </button>
       </div>
     </section>
   );
