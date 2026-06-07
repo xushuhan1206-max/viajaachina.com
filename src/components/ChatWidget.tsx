@@ -19,6 +19,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,12 +36,16 @@ export default function ChatWidget() {
     setInput("");
     setIsLoading(true);
 
+    // Add empty assistant message for streaming
+    setMessages([...newMessages, { role: "assistant", content: "" }]);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+          message: msg,
+          conversation_id: conversationId,
         }),
       });
 
@@ -48,27 +53,62 @@ export default function ChatWidget() {
         throw new Error("API error");
       }
 
-      // Stream response
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No reader");
 
       const decoder = new TextDecoder();
       let assistantContent = "";
-
-      setMessages([...newMessages, { role: "assistant", content: "" }]);
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        assistantContent += decoder.decode(value);
-        setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          // Dify stream format: plain text chunks (already decoded by route.ts)
+          // Also check for special conversation ID token
+          if (line.startsWith("__CONV_ID__:")) {
+            const cid = line.replace("__CONV_ID__:", "").trim();
+            if (cid) setConversationId(cid);
+            continue;
+          }
+          if (line.trim()) {
+            assistantContent += line + "\n";
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                role: "assistant",
+                content: assistantContent.trim(),
+              };
+              return updated;
+            });
+          }
+        }
+      }
+
+      // Flush remaining buffer
+      if (buffer.trim() && !buffer.startsWith("__CONV_ID__")) {
+        assistantContent += buffer;
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: assistantContent.trim(),
+          };
+          return updated;
+        });
       }
     } catch {
-      setMessages([
-        ...newMessages,
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
         {
           role: "assistant",
-          content: "Lo siento, hubo un error al conectar con el asistente. Por favor, intenta de nuevo.",
+          content:
+            "Lo siento, hubo un error al conectar con el asistente. Por favor, intenta de nuevo.",
         },
       ]);
     } finally {
@@ -98,7 +138,9 @@ export default function ChatWidget() {
           {/* Header */}
           <div className="bg-[#1A1A2E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-3 h-3 rounded-full bg-[#C62828]" />
-            <span className="text-white text-sm font-semibold flex-1">ViajaAChina AI</span>
+            <span className="text-white text-sm font-semibold flex-1">
+              ViajaAChina AI
+            </span>
             <button
               onClick={() => setIsOpen(false)}
               className="text-white/60 text-lg hover:text-white transition-colors bg-transparent border-none cursor-pointer"
@@ -109,7 +151,7 @@ export default function ChatWidget() {
 
           {/* Messages */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {/* Welcome message (if no messages) */}
+            {/* Welcome message */}
             {messages.length === 0 && (
               <>
                 <div className="flex gap-2">
@@ -140,7 +182,10 @@ export default function ChatWidget() {
 
             {/* Chat messages */}
             {messages.map((msg, i) => (
-              <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}>
+              <div
+                key={i}
+                className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}
+              >
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-[10px] font-bold">AI</span>
@@ -153,7 +198,7 @@ export default function ChatWidget() {
                       : "bg-gray-100 rounded-tl-sm"
                   }`}
                 >
-                  {msg.content || (isLoading && i === messages.length - 1 ? "..." : "")}
+                  {msg.content || (isLoading && i === messages.length - 1 ? "Escribiendo..." : "")}
                 </div>
                 {msg.role === "user" && (
                   <div className="w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0">

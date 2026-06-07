@@ -1,112 +1,132 @@
 import { NextRequest } from "next/server";
 
-const SYSTEM_PROMPT = `Eres un asistente experto en viajes a China que habla exclusivamente en español. Tu nombre es ViajaAChina AI.
-
-REGLAS IMPORTANTES:
-- Responde SIEMPRE en español. Nunca uses palabras en inglés ni chino (excepto nombres propios de lugares).
-- Sé conciso pero útil. Máximo 300 palabras por respuesta.
-- Incluye datos prácticos: precios en ¥ (yuan), tiempos de viaje, requisitos.
-- Si mencionas una app china, explica brevemente cómo usarla.
-- Cuando recomiendes un itinerario, estructura por días.
-- Menciona siempre si algo requiere reserva previa.
-
-CONOCIMIENTO ESPECIALIZADO:
-- Política de visa: España y 5 países de Latinoamérica (Argentina, Brasil, Chile, Colombia, Perú) tienen 30 días sin visa desde 2024-2025.
-- Pagos: Alipay Tour Pass permite vincular tarjetas internacionales. WeChat Pay también acepta tarjetas extranjeras desde 2024.
-- Transporte: Tren bala (高铁) es la mejor opción entre ciudades. App Trip.com permite comprar con pasaporte en español.
-- Internet: Google/WhatsApp/Instagram no funcionan. Necesitan VPN o usar alternativas chinas.
-- Idioma: Muy pocos hablan español o inglés fuera de grandes ciudades. Traducción con app es esencial.
-
-FORMATO DE RESPUESTA:
-- Usa bullets y estructura clara
-- Incluye emojis relevantes (🚄 🛂 💳 📱 🗺️) para hacer visual
-- Si el usuario pide una ruta, genera un itinerario día por día
-- Al final de cada respuesta, sugiere 2-3 preguntas de seguimiento que el usuario podría hacer`;
+const DIFY_API_KEY = process.env.DIFY_API_KEY || "";
+const DIFY_API_URL = "https://api.dify.ai/v1/chat-messages";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { message, conversation_id = "" } = await req.json();
 
-    if (!messages || !Array.isArray(messages)) {
-      return Response.json({ error: "Messages array required" }, { status: 400 });
+    if (!message || typeof message !== "string") {
+      return Response.json({ error: "Message required" }, { status: 400 });
     }
 
-    // Rate limiting (simple IP-based)
-    // In production, use a proper rate limiter with Redis/Supabase
-
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) {
+    if (!DIFY_API_KEY) {
       return Response.json(
-        { error: "AI service not configured" },
+        { error: "Dify API not configured. Set DIFY_API_KEY env variable." },
         { status: 500 }
       );
     }
 
-    // Call DeepSeek API (OpenAI-compatible)
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+    // Call Dify Chatflow API (streaming)
+    const difyRes = await fetch(DIFY_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${DIFY_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...messages.slice(-10), // Keep last 10 messages for context
-        ],
-        max_tokens: 1500,
-        temperature: 0.7,
-        stream: true,
+        inputs: {},
+        query: message,
+        user: "web-user",
+        response_mode: "streaming",
+        conversation_id,
       }),
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("DeepSeek API error:", err);
+    if (!difyRes.ok) {
+      const errText = await difyRes.text();
+      console.error("Dify API error:", errText);
       return Response.json(
-        { error: "AI service error" },
+        { error: `Dify API error: ${difyRes.status}` },
         { status: 502 }
       );
     }
 
-    // Stream the response
+    // Stream Dify response back to client
+    // Dify streaming format: "data: {JSON}\n\n"
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        const reader = response.body?.getReader();
+        const reader = difyRes.body?.getReader();
         if (!reader) {
           controller.close();
           return;
         }
 
         const decoder = new TextDecoder();
+        let buffer = "";
+        let conversationId = conversation_id;
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
           for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") {
-                controller.close();
-                return;
+            if (!line.startsWith("data: ")) continue;
+            const dataStr = line.slice(6).trim();
+            if (dataStr === "[DONE]") {
+              controller.close();
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(dataStr);
+              const event = parsed.event;
+              const data = parsed.data || {};
+
+              // Capture conversation_id from the first message
+              if (data.conversation_id && !conversationId) {
+                conversationId = data.conversation_id;
               }
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  controller.enqueue(encoder.encode(content));
+
+              if (event === "message") {
+                // Dify returns answer chunks in data.answer
+                const answer = data.answer || "";
+                if (answer) {
+                  controller.enqueue(encoder.encode(answer));
                 }
-              } catch {
-                // Skip malformed JSON
               }
+
+              if (event === "message_end") {
+                // Send conversation_id to client as a special token
+                if (conversationId) {
+                  controller.enqueue(
+                    encoder.encode(`\n__CONV_ID__:${conversationId}\n`)
+                  );
+                }
+                continue;
+              }
+
+              if (event === "error") {
+                console.error("Dify stream error:", data);
+                controller.enqueue(
+                  encoder.encode(`[Error: ${data.message || "Unknown error"}]`)
+                );
+              }
+            } catch {
+              // Skip malformed JSON lines
             }
           }
         }
+
+        // Flush remaining buffer
+        if (buffer.startsWith("data: ")) {
+          try {
+            const dataStr = buffer.slice(6).trim();
+            const parsed = JSON.parse(dataStr);
+            if (parsed.event === "message" && parsed.data?.answer) {
+              controller.enqueue(encoder.encode(parsed.data.answer));
+            }
+          } catch {
+            // ignore
+          }
+        }
+
         controller.close();
       },
     });
