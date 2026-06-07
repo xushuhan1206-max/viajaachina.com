@@ -5,6 +5,7 @@ import Hero from "@/components/Hero";
 import CitiesSection from "@/components/CitiesSection";
 import GuidesSection from "@/components/GuidesSection";
 import MapSection from "@/components/MapSection";
+import ChatWidget from "@/components/ChatWidget";
 import RoutePlannerModal, { RouteParams } from "@/components/RoutePlannerModal";
 
 export default function Home() {
@@ -17,7 +18,6 @@ export default function Home() {
   }, []);
 
   const handleRouteSubmit = (params: RouteParams) => {
-    // Build structured message for Dify chatbot
     const cityNames = params.cities.join(", ");
     const budgetMap: Record<string, string> = {
       low: "mochilero",
@@ -30,8 +30,8 @@ Días: ${params.days}
 Presupuesto: ${budgetMap[params.budget] || params.budget}
 Nacionalidad: ${params.nationality}`;
 
-    // Send to Dify chatbot via custom event
-    const event = new CustomEvent("dify-send-message", { detail: message });
+    // Send to ChatWidget via custom event
+    const event = new CustomEvent("chatbot-send-message", { detail: message });
     window.dispatchEvent(event);
   };
 
@@ -41,6 +41,7 @@ Nacionalidad: ${params.nationality}`;
       <CitiesSection />
       <MapSection />
       <GuidesSection />
+      <ChatWidget />
       <RoutePlannerModal
         isOpen={showPlanner}
         onClose={() => setShowPlanner(false)}

@@ -21,10 +21,36 @@ export default function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pendingMessageRef = useRef<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Escuchar evento programático desde RoutePlannerModal
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const message = e.detail;
+      if (!message) return;
+      if (isOpen) {
+        sendMessage(message);
+      } else {
+        setIsOpen(true);
+        pendingMessageRef.current = message;
+      }
+    };
+    window.addEventListener("chatbot-send-message", handler as EventListener);
+    return () => window.removeEventListener("chatbot-send-message", handler as EventListener);
+  }, [isOpen]);
+
+  // Enviar mensaje pendiente cuando se abre el chat
+  useEffect(() => {
+    if (isOpen && pendingMessageRef.current) {
+      const msg = pendingMessageRef.current;
+      pendingMessageRef.current = null;
+      setTimeout(() => sendMessage(msg), 150);
+    }
+  }, [isOpen]);
 
   async function sendMessage(text?: string) {
     const msg = text || input.trim();
@@ -36,7 +62,6 @@ export default function ChatWidget() {
     setInput("");
     setIsLoading(true);
 
-    // Add empty assistant message for streaming
     setMessages([...newMessages, { role: "assistant", content: "" }]);
 
     try {
@@ -49,9 +74,7 @@ export default function ChatWidget() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("API error");
-      }
+      if (!res.ok) throw new Error("API error");
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No reader");
@@ -69,8 +92,6 @@ export default function ChatWidget() {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          // Dify stream format: plain text chunks (already decoded by route.ts)
-          // Also check for special conversation ID token
           if (line.startsWith("__CONV_ID__:")) {
             const cid = line.replace("__CONV_ID__:", "").trim();
             if (cid) setConversationId(cid);
@@ -90,7 +111,6 @@ export default function ChatWidget() {
         }
       }
 
-      // Flush remaining buffer
       if (buffer.trim() && !buffer.startsWith("__CONV_ID__")) {
         assistantContent += buffer;
         setMessages((prev) => {
@@ -132,9 +152,9 @@ export default function ChatWidget() {
         </button>
       )}
 
-      {/* Chat Window */}
+      {/* Chat Window - agrandado */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[999] w-[380px] max-w-[calc(100vw-24px)] h-[520px] max-h-[75vh] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-[999] w-[420px] max-w-[calc(100vw-24px)] h-[600px] max-h-[85vh] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-[#1A1A2E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-3 h-3 rounded-full bg-[#C62828]" />
@@ -151,7 +171,7 @@ export default function ChatWidget() {
 
           {/* Messages */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {/* Welcome message */}
+            {/* Welcome message (solo si no hay mensajes) */}
             {messages.length === 0 && (
               <>
                 <div className="flex gap-2">
@@ -165,7 +185,6 @@ export default function ChatWidget() {
                     </p>
                   </div>
                 </div>
-                {/* Quick questions */}
                 <div className="flex flex-wrap gap-1.5 ml-9">
                   {QUICK_QUESTIONS.map((q) => (
                     <button
