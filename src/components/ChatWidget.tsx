@@ -159,11 +159,11 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[999] w-[400px] max-w-[calc(100vw-24px)] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden border border-gray-100">
+        <div className="fixed bottom-6 right-6 z-[999] w-[440px] max-w-[calc(100vw-24px)] h-[600px] max-h-[90vh] bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden border border-gray-100">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#1A1A2E] to-[#16213E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center shadow-[0_2px_8px_rgba(198,40,40,0.4)]">
-              <span className="text-white text-[11px] font-bold">AI</span>
+            <div className="w-9 h-9 rounded-full bg-[#C62828] flex items-center justify-center shadow-[0_2px_8px_rgba(198,40,40,0.4)]">
+              <span className="text-white text-[12px] font-bold">AI</span>
             </div>
             <div className="flex-1 min-w-0">
               <span className="text-white text-sm font-semibold block truncate">ViajaAChina AI</span>
@@ -181,28 +181,28 @@ export default function ChatWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#F8F9FA]">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-[#F8F9FA]">
             {/* Welcome message (only if no messages) */}
             {messages.length === 0 && (
               <>
                 <div className="flex gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
-                    <span className="text-white text-[11px] font-bold">AI</span>
+                  <div className="w-9 h-9 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
+                    <span className="text-white text-[12px] font-bold">AI</span>
                   </div>
-                  <div className="bg-white rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] max-w-[88%] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-                    <p className="font-semibold text-[#1A1A2E] mb-1">¡Hola! 👋</p>
+                  <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 text-[13.5px] max-w-[88%] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                    <p className="font-semibold text-[#1A1A2E] mb-1.5">¡Hola! 👋</p>
                     <p className="text-gray-600 leading-relaxed">
                       Soy tu asistente de viaje a China. Puedo ayudarte con <strong>rutas personalizadas</strong>, visa, pagos, transporte y más.
                     </p>
-                    <p className="text-gray-500 text-[11px] mt-1.5">¿Por dónde quieres empezar?</p>
+                    <p className="text-gray-500 text-[11.5px] mt-2">¿Por dónde quieres empezar?</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 ml-11">
+                <div className="flex flex-wrap gap-2.5 ml-12">
                   {QUICK_QUESTIONS.map((q) => (
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="bg-white text-[12px] px-3 py-1.5 rounded-full border border-[#FFB300]/30 text-[#8B6914] hover:bg-[#FFB300]/10 hover:border-[#FFB300]/50 cursor-pointer transition-all duration-150 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+                      className="bg-white text-[12.5px] px-3.5 py-2 rounded-full border border-[#FFB300]/30 text-[#8B6914] hover:bg-[#FFB300]/10 hover:border-[#FFB300]/50 cursor-pointer transition-all duration-150 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
                     >
                       {q}
                     </button>
@@ -218,12 +218,12 @@ export default function ChatWidget() {
                 className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : ""}`}
               >
                 {msg.role === "assistant" && msg.content !== "__TYPING__" && (
-                  <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
-                    <span className="text-white text-[11px] font-bold">AI</span>
+                  <div className="w-9 h-9 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
+                    <span className="text-white text-[12px] font-bold">AI</span>
                   </div>
                 )}
                 <div
-                  className={`rounded-2xl px-3.5 py-2.5 text-[13px] max-w-[82%] whitespace-pre-wrap leading-relaxed ${
+                  className={`rounded-2xl px-4 py-3 text-[14px] max-w-[85%] whitespace-pre-wrap leading-relaxed ${
                     msg.role === "user"
                       ? "bg-[#C62828] text-white rounded-tr-md"
                       : msg.content === "__TYPING__"
@@ -233,17 +233,17 @@ export default function ChatWidget() {
                 >
                   {msg.content === "__TYPING__" ? (
                     <div className="flex items-center gap-1 py-1 px-1">
-                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-[#C62828] animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-[#C62828] animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-[#C62828] animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   ) : (
                     msg.content
                   )}
                 </div>
                 {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(83,74,183,0.3)]">
-                    <span className="text-white text-[11px] font-bold">TÚ</span>
+                  <div className="w-9 h-9 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(83,74,183,0.3)]">
+                    <span className="text-white text-[12px] font-bold">TÚ</span>
                   </div>
                 )}
               </div>
@@ -252,7 +252,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-100 px-3 py-2.5 flex gap-2 flex-shrink-0 bg-white">
+          <div className="border-t border-gray-100 px-3 py-3 flex gap-2.5 flex-shrink-0 bg-white items-center">
             <input
               type="text"
               value={input}
@@ -260,12 +260,12 @@ export default function ChatWidget() {
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Escribe tu pregunta..."
               disabled={isLoading}
-              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#C62828] focus:ring-2 focus:ring-[#C62828]/20 transition-all duration-150 disabled:opacity-50 bg-[#F8F9FA]"
+              className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-[14px] outline-none focus:border-[#C62828] focus:ring-2 focus:ring-[#C62828]/20 transition-all duration-150 disabled:opacity-50 bg-[#F8F9FA] placeholder:text-gray-400"
             />
             <button
               onClick={() => sendMessage()}
               disabled={isLoading || !input.trim()}
-              className="bg-[#C62828] text-white rounded-xl px-4 py-2 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors duration-150 disabled:opacity-50 flex items-center gap-1 flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]"
+              className="bg-[#C62828] text-white rounded-xl px-4 py-2.5 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors duration-150 disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]"
             >
               {isLoading ? (
                 <span className="flex items-center gap-1">
