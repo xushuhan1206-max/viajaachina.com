@@ -28,14 +28,38 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     if (type === "success") setTimeout(onClose, 2000);
   };
 
+  const getReadableError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error || "");
+
+    if (message.includes("Failed to fetch")) {
+      return "No se pudo conectar con el servicio de autenticación. Recarga la página e inténtalo de nuevo.";
+    }
+
+    if (message.includes("over_email_send_rate_limit")) {
+      return "Has solicitado demasiados correos en poco tiempo. Espera un momento antes de volver a intentarlo.";
+    }
+
+    if (message.includes("email rate limit exceeded")) {
+      return "El envío de correos está temporalmente limitado. Espera un momento y vuelve a intentarlo.";
+    }
+
+    return message || "Ha ocurrido un error inesperado.";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return showMessage(error.message, "error");
-    showMessage("¡Bienvenido! Redirigiendo...", "success");
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return showMessage(error.message, "error");
+      showMessage("¡Bienvenido! Redirigiendo...", "success");
+    } catch (error) {
+      showMessage(getReadableError(error), "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -44,26 +68,38 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     if (password.length < 6) return showMessage("La contraseña debe tener al menos 6 caracteres", "error");
     setLoading(true);
     setMessage(null);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setLoading(false);
-    if (error) return showMessage(error.message, "error");
-    showMessage("¡Registro exitoso! Revisa tu email para confirmar.", "success");
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) return showMessage(getReadableError(error), "error");
+      showMessage("¡Registro exitoso! Revisa tu email para confirmar.", "success");
+    } catch (error) {
+      showMessage(getReadableError(error), "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    setLoading(false);
-    if (error) return showMessage(error.message, "error");
-    showMessage("Enviado! Revisa tu email para restablecer la contraseña.", "success");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) return showMessage(getReadableError(error), "error");
+      showMessage("Enviado! Revisa tu email para restablecer la contraseña.", "success");
+    } catch (error) {
+      showMessage(getReadableError(error), "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const title = mode === "login" ? "Iniciar sesión" : mode === "signup" ? "Crear cuenta" : "Restablecer contraseña";
