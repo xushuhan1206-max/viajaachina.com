@@ -27,7 +27,7 @@ export default function CitiesSection() {
     const session = data.session;
     if (session?.user) {
       const { data: rows } = await supabase.from("favorites").select("city_id");
-      setFavorites(rows?.map(r => r.city_id) || []);
+      setFavorites((rows as { city_id: string }[] | null)?.map((r) => r.city_id) || []);
     } else {
       const saved = localStorage.getItem("chinaviaja_favs");
       if (saved) setFavorites(JSON.parse(saved));
@@ -45,7 +45,7 @@ export default function CitiesSection() {
     if (localFavs.length === 0) return;
     // 批量插入（忽略重复）
     const rows = localFavs.map(city_id => ({ user_id: user.id, city_id }));
-    supabase.from("favorites").upsert(rows, { onConflict: "user_id,city_id" }).then(() => {
+    supabase.from("favorites").upsert(rows as any, { onConflict: "user_id,city_id" }).then(() => {
       localStorage.removeItem("chinaviaja_favs");
     });
   }, [user]);
@@ -61,7 +61,7 @@ export default function CitiesSection() {
         await supabase.from("favorites").delete().eq("user_id", session.user.id).eq("city_id", id);
         setFavorites(prev => prev.filter(c => c !== id));
       } else {
-        await supabase.from("favorites").insert({ user_id: session.user.id, city_id: id });
+        await supabase.from("favorites").insert({ user_id: session.user.id, city_id: id } as any);
         setFavorites(prev => [...prev, id]);
       }
     } else {
