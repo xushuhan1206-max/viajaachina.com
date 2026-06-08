@@ -76,7 +76,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) return showMessage(getReadableError(error), "error");
-      showMessage("¡Registro exitoso! Revisa tu email para confirmar.", "success");
+      setMode("login");
+      setPassword("");
+      setConfirmPwd("");
+      showMessage("Cuenta creada. Ya puedes iniciar sesión.", "success");
     } catch (error) {
       showMessage(getReadableError(error), "error");
     } finally {
