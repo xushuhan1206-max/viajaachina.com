@@ -8,10 +8,11 @@ interface Message {
 }
 
 const QUICK_QUESTIONS = [
-  "¿Necesito visa para China?",
-  "¿Cómo pago en China?",
-  "Ruta 7 días Beijing + Xi'an",
-  "¿Cómo comprar billetes de tren?",
+  "🗺️ Planificar una ruta de viaje",
+  "🏛️ Descubrir ciudades de China",
+  "🛂 ¿Necesito visa para China?",
+  "💳 ¿Cómo pago en China?",
+  "🚄 Transporte entre ciudades",
 ];
 
 export default function ChatWidget() {
@@ -62,7 +63,8 @@ export default function ChatWidget() {
     setInput("");
     setIsLoading(true);
 
-    setMessages([...newMessages, { role: "assistant", content: "" }]);
+    // Placeholder: show typing indicator
+    setMessages([...newMessages, { role: "assistant", content: "__TYPING__" }]);
 
     try {
       const res = await fetch("/api/chat", {
@@ -131,8 +133,7 @@ export default function ChatWidget() {
         ...prev.slice(0, -1),
         {
           role: "assistant",
-          content:
-            `Lo siento, hubo un error (${err?.message || "desconocido"}).\n\nPor favor, intenta de nuevo.`,
+          content: `Lo siento, hubo un error (${err?.message || "desconocido"}).\n\nPor favor, intenta de nuevo.`,
         },
       ]);
     } finally {
@@ -146,55 +147,62 @@ export default function ChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-[999] w-14 h-14 rounded-full bg-[#C62828] shadow-[0_4px_20px_rgba(198,40,40,0.4)] flex items-center justify-center hover:scale-110 transition-transform"
+          className="fixed bottom-6 right-6 z-[999] w-16 h-16 rounded-full bg-gradient-to-br from-[#C62828] to-[#B71C1C] shadow-[0_4px_20px_rgba(198,40,40,0.5)] flex items-center justify-center hover:scale-110 transition-transform duration-200"
         >
-          <span className="absolute inset-[-4px] rounded-full border-2 border-[#C62828] animate-ping opacity-50" />
-          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white relative z-10">
+          <span className="absolute inset-[-6px] rounded-full border-2 border-[#C62828]/40 animate-ping opacity-60" />
+          <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white relative z-10">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
             <path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z" />
           </svg>
         </button>
       )}
 
-      {/* Chat Window - agrandado */}
+      {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[999] w-[420px] max-w-[calc(100vw-24px)] h-[600px] max-h-[85vh] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-[999] w-[400px] max-w-[calc(100vw-24px)] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-[#1A1A2E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            <div className="w-3 h-3 rounded-full bg-[#C62828]" />
-            <span className="text-white text-sm font-semibold flex-1">
-              ViajaAChina AI
-            </span>
+          <div className="bg-gradient-to-r from-[#1A1A2E] to-[#16213E] px-4 py-3 flex items-center gap-3 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center shadow-[0_2px_8px_rgba(198,40,40,0.4)]">
+              <span className="text-white text-[11px] font-bold">AI</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-white text-sm font-semibold block truncate">ViajaAChina AI</span>
+              <span className="text-[10px] text-green-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                En línea
+              </span>
+            </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white/60 text-lg hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              className="text-white/50 text-lg hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10"
             >
               ✕
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {/* Welcome message (solo si no hay mensajes) */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#F8F9FA]">
+            {/* Welcome message (only if no messages) */}
             {messages.length === 0 && (
               <>
-                <div className="flex gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-[10px] font-bold">AI</span>
+                <div className="flex gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
+                    <span className="text-white text-[11px] font-bold">AI</span>
                   </div>
-                  <div className="bg-gray-100 rounded-xl rounded-tl-sm px-3 py-2 text-[13px] max-w-[85%]">
-                    <p className="font-medium mb-1">¡Hola! 👋 Soy tu asistente para viajar a China.</p>
-                    <p className="text-gray-600 text-[12px]">
-                      Puedo ayudarte con rutas, visa, pagos, transporte y más. ¿Qué necesitas saber?
+                  <div className="bg-white rounded-2xl rounded-tl-md px-3.5 py-2.5 text-[13px] max-w-[88%] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                    <p className="font-semibold text-[#1A1A2E] mb-1">¡Hola! 👋</p>
+                    <p className="text-gray-600 leading-relaxed">
+                      Soy tu asistente de viaje a China. Puedo ayudarte con <strong>rutas personalizadas</strong>, visa, pagos, transporte y más.
                     </p>
+                    <p className="text-gray-500 text-[11px] mt-1.5">¿Por dónde quieres empezar?</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 ml-9">
+                <div className="flex flex-wrap gap-2 ml-11">
                   {QUICK_QUESTIONS.map((q) => (
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="bg-[#FFB300]/10 text-[#8B6914] text-[11px] px-2.5 py-1 rounded-full border border-[#FFB300]/20 cursor-pointer hover:bg-[#FFB300]/20 transition-colors"
+                      className="bg-white text-[12px] px-3 py-1.5 rounded-full border border-[#FFB300]/30 text-[#8B6914] hover:bg-[#FFB300]/10 hover:border-[#FFB300]/50 cursor-pointer transition-all duration-150 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
                     >
                       {q}
                     </button>
@@ -207,25 +215,35 @@ export default function ChatWidget() {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}
+                className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : ""}`}
               >
-                {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-[10px] font-bold">AI</span>
+                {msg.role === "assistant" && msg.content !== "__TYPING__" && (
+                  <div className="w-8 h-8 rounded-full bg-[#C62828] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]">
+                    <span className="text-white text-[11px] font-bold">AI</span>
                   </div>
                 )}
                 <div
-                  className={`rounded-xl px-3 py-2 text-[13px] max-w-[80%] whitespace-pre-wrap ${
+                  className={`rounded-2xl px-3.5 py-2.5 text-[13px] max-w-[82%] whitespace-pre-wrap leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-[#EEEDFE] text-[#1A1A2E] rounded-tr-sm"
-                      : "bg-gray-100 rounded-tl-sm"
+                      ? "bg-[#C62828] text-white rounded-tr-md"
+                      : msg.content === "__TYPING__"
+                      ? "bg-white rounded-tl-md flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                      : "bg-white rounded-tl-md shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
                   }`}
                 >
-                  {msg.content || (isLoading && i === messages.length - 1 ? "Escribiendo..." : "")}
+                  {msg.content === "__TYPING__" ? (
+                    <div className="flex items-center gap-1 py-1 px-1">
+                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-[#C62828]/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
                 {msg.role === "user" && (
-                  <div className="w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-[10px] font-bold">TÚ</span>
+                  <div className="w-8 h-8 rounded-full bg-[#534AB7] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(83,74,183,0.3)]">
+                    <span className="text-white text-[11px] font-bold">TÚ</span>
                   </div>
                 )}
               </div>
@@ -234,7 +252,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-200 px-3 py-2.5 flex gap-2 flex-shrink-0">
+          <div className="border-t border-gray-100 px-3 py-2.5 flex gap-2 flex-shrink-0 bg-white">
             <input
               type="text"
               value={input}
@@ -242,14 +260,27 @@ export default function ChatWidget() {
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Escribe tu pregunta..."
               disabled={isLoading}
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#C62828] transition-colors disabled:opacity-50"
+              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-[13px] outline-none focus:border-[#C62828] focus:ring-2 focus:ring-[#C62828]/20 transition-all duration-150 disabled:opacity-50 bg-[#F8F9FA]"
             />
             <button
               onClick={() => sendMessage()}
               disabled={isLoading || !input.trim()}
-              className="bg-[#C62828] text-white rounded-lg px-3 py-2 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors disabled:opacity-50"
+              className="bg-[#C62828] text-white rounded-xl px-4 py-2 text-[13px] font-medium hover:bg-[#B71C1C] transition-colors duration-150 disabled:opacity-50 flex items-center gap-1 flex-shrink-0 shadow-[0_2px_8px_rgba(198,40,40,0.3)]"
             >
-              {isLoading ? "..." : "Enviar"}
+              {isLoading ? (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                  </svg>
+                  Enviar
+                </>
+              )}
             </button>
           </div>
         </div>
