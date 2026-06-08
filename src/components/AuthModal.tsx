@@ -70,12 +70,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) return showMessage(getReadableError(error), "error");
+      if (data.session) {
+        showMessage("Cuenta creada. Has iniciado sesión automáticamente.", "success");
+        return;
+      }
       setMode("login");
       setPassword("");
       setConfirmPwd("");
