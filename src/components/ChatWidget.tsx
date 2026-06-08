@@ -74,7 +74,10 @@ export default function ChatWidget() {
         }),
       });
 
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No reader");
@@ -122,13 +125,14 @@ export default function ChatWidget() {
           return updated;
         });
       }
-    } catch {
+    } catch (err: any) {
+      console.error("Chat error:", err);
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
           content:
-            "Lo siento, hubo un error al conectar con el asistente. Por favor, intenta de nuevo.",
+            `Lo siento, hubo un error (${err?.message || "desconocido"}).\n\nPor favor, intenta de nuevo.`,
         },
       ]);
     } finally {

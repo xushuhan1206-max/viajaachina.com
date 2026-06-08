@@ -1,5 +1,13 @@
 import { NextRequest } from "next/server";
 
+export async function GET() {
+  return Response.json({
+    difyConfigured: !!DIFY_API_KEY,
+    difyKeyPrefix: DIFY_API_KEY ? DIFY_API_KEY.slice(0, 8) + "..." : null,
+    apiUrl: DIFY_API_URL,
+  });
+}
+
 const DIFY_API_KEY = process.env.DIFY_API_KEY || "";
 const DIFY_API_URL = "https://api.dify.ai/v1/chat-messages";
 
@@ -36,9 +44,9 @@ export async function POST(req: NextRequest) {
 
     if (!difyRes.ok) {
       const errText = await difyRes.text();
-      console.error("Dify API error:", errText);
+      console.error("Dify API error:", difyRes.status, errText);
       return Response.json(
-        { error: `Dify API error: ${difyRes.status}` },
+        { error: `Dify API error ${difyRes.status}: ${errText}` },
         { status: 502 }
       );
     }
@@ -138,10 +146,10 @@ export async function POST(req: NextRequest) {
         "Transfer-Encoding": "chunked",
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat API error:", error);
     return Response.json(
-      { error: "Internal server error" },
+      { error: `Internal server error: ${error?.message || String(error)}` },
       { status: 500 }
     );
   }
