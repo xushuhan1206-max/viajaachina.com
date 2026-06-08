@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { cities, cityNames } from "@/lib/data/cities";
 import CityCard from "./CityCard";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function CitiesSection() {
+  const supabase = getSupabaseClient();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [user, setUser] = useState<{ id: string } | null>(null);
 
