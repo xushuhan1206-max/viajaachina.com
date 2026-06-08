@@ -200,7 +200,7 @@ export default function MapSection() {
   }
 
   return (
-    <section className="w-full max-w-[1100px] mx-auto px-5 pb-16" id="mapa">
+    <section className="w-full max-w-[1100px] mx-auto px-6 pb-16" id="mapa">
       <h2 className="text-2xl font-bold mb-2">🗺️ Tu mapa de viaje</h2>
       <p className="text-sm text-gray-500 mb-5">
         Haz clic en las ciudades del mapa para planificar tu ruta. Selecciona dos o más para ver transporte.

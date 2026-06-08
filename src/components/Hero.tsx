@@ -1,14 +1,31 @@
 "use client";
+import { useState } from "react";
 
 const quickTags = [
-  "¿Necesito visa?",
-  "¿Cómo pago en China?",
-  "Ruta 10 días",
-  "Beijing vs Shanghai",
-  "Tren bala",
+  "🗺️ Planificar ruta",
+  "🏙️ Descubrir ciudades",
+  "🛂 ¿Necesito visa?",
+  "💳 ¿Cómo pago?",
+  "🚄 Transporte",
 ];
 
 export default function Hero() {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSend = () => {
+    if (!inputValue.trim()) return;
+    window.dispatchEvent(
+      new CustomEvent("chatbot-send-message", { detail: { message: inputValue } })
+    );
+    setInputValue("");
+  };
+
+  const handleTagClick = (tag: string) => {
+    window.dispatchEvent(
+      new CustomEvent("chatbot-send-message", { detail: { message: tag } })
+    );
+  };
+
   return (
     <section className="relative w-full min-h-[520px] md:min-h-[580px] flex items-center justify-center overflow-hidden mt-14">
       {/* Video Background */}
@@ -32,7 +49,7 @@ export default function Hero() {
       <div className="absolute -bottom-12 left-[20%] w-40 md:w-48 h-40 md:h-48 rounded-full bg-[#FFB300]/8 z-[1]" />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-[720px] mx-auto px-5 md:px-8 py-12 md:py-20">
+      <div className="relative z-10 w-full max-w-[720px] mx-auto px-6 md:px-8 py-12 md:py-20">
         <p className="text-[#FFB300] text-xs font-semibold tracking-[2px] uppercase mb-3">
           Tu guía de viaje con IA
         </p>
@@ -51,8 +68,14 @@ export default function Hero() {
             type="text"
             placeholder="Pregúntame sobre China... (visa, pagos, rutas...)"
             className="flex-1 bg-transparent border-none text-white text-sm md:text-[15px] outline-none placeholder:text-white/40"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
           />
-          <button className="w-8 h-8 rounded-lg bg-[#C62828] flex-shrink-0 flex items-center justify-center hover:scale-105 transition-transform">
+          <button
+            onClick={handleSend}
+            className="w-8 h-8 rounded-lg bg-[#C62828] flex-shrink-0 flex items-center justify-center hover:scale-105 transition-transform"
+          >
             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
@@ -64,7 +87,8 @@ export default function Hero() {
           {quickTags.map((tag) => (
             <span
               key={tag}
-              className="bg-[#FFB300]/[0.12] text-[#FFB300] text-[11px] md:text-xs px-3 py-1.5 rounded-full border border-[#FFB300]/25 cursor-pointer hover:bg-[#FFB300]/25 transition-colors"
+              onClick={() => handleTagClick(tag)}
+              className="bg-[#FFB300]/[0.12] text-[#FFB300] text-[12px] md:text-[12px] px-3 py-1.5 rounded-full border border-[#FFB300]/25 cursor-pointer hover:bg-[#FFB300]/25 transition-colors"
             >
               {tag}
             </span>

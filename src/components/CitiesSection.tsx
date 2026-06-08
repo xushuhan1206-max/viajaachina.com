@@ -29,7 +29,7 @@ export default function CitiesSection() {
       <p className="text-sm text-gray-500 mb-7">
         Las más visitadas por turistas internacionales en 2025-2026 (datos: Visa + Xiaohongshu)
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {popular.map((city) => (
           <CityCard
             key={city.id}
@@ -47,7 +47,7 @@ export default function CitiesSection() {
       <p className="text-sm text-gray-500 mb-4">
         Más allá de las rutas clásicas — donde los viajeros aventureros van ahora
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {emerging.map((city) => (
           <CityCard
             key={city.id}
@@ -56,6 +56,17 @@ export default function CitiesSection() {
             onToggleFav={toggleFav}
           />
         ))}
+      </div>
+
+      {/* View All Cities Button */}
+      <div className="flex justify-center mt-8">
+        <a
+          href="/cities"
+          className="inline-flex items-center gap-2 px-6 py-2.5 border-2 border-[#C62828] text-[#C62828] font-semibold text-sm rounded-xl hover:bg-[#C62828] hover:text-white transition-colors"
+        >
+          Ver todas las ciudades
+          <span>→</span>
+        </a>
       </div>
     </section>
   );

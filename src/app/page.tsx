@@ -6,6 +6,7 @@ import CitiesSection from "@/components/CitiesSection";
 import GuidesSection from "@/components/GuidesSection";
 import MapSection from "@/components/MapSection";
 import ChatWidget from "@/components/ChatWidget";
+import Footer from "@/components/Footer";
 import RoutePlannerModal, { RouteParams } from "@/components/RoutePlannerModal";
 
 export default function Home() {
@@ -41,6 +42,7 @@ Nacionalidad: ${params.nationality}`;
       <CitiesSection />
       <MapSection />
       <GuidesSection />
+      <Footer />
       <ChatWidget />
       <RoutePlannerModal
         isOpen={showPlanner}

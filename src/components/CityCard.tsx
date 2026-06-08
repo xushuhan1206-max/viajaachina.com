@@ -11,7 +11,7 @@ interface CityCardProps {
 export default function CityCard({ city, isFavorited, onToggleFav }: CityCardProps) {
   return (
     <div
-      className={`relative rounded-xl overflow-hidden h-[180px] md:h-[200px] cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group ${isFavorited ? "ring-2 ring-[#FFB300] ring-offset-1" : ""}`}
+      className={`relative rounded-xl overflow-hidden h-[200px] md:h-[240px] cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group ${isFavorited ? "ring-2 ring-[#FFB300] ring-offset-1" : ""}`}
     >
       {/* Background Image */}
       <img
@@ -49,7 +49,7 @@ export default function CityCard({ city, isFavorited, onToggleFav }: CityCardPro
       {/* Text content */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
         <h3 className="text-white text-sm md:text-base font-semibold drop-shadow-md">{city.name}</h3>
-        <p className="text-white/80 text-[11px] md:text-xs mt-0.5 drop-shadow-sm line-clamp-2">{city.desc}</p>
+        <p className="text-white/80 text-[12px] md:text-[11px] mt-0.5 drop-shadow-sm line-clamp-2">{city.desc}</p>
       </div>
     </div>
   );
