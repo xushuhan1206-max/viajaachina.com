@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Stream Dify response back to client
-    // Dify streaming format: "data: {JSON}\n\n"
+    // Dify SSE format: "data: {JSON}\n\n"
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -85,23 +85,22 @@ export async function POST(req: NextRequest) {
             try {
               const parsed = JSON.parse(dataStr);
               const event = parsed.event;
-              const data = parsed.data || {};
 
-              // Capture conversation_id from the first message
-              if (data.conversation_id && !conversationId) {
-                conversationId = data.conversation_id;
+              // Capture conversation_id (top-level field in Dify)
+              if (parsed.conversation_id && !conversationId) {
+                conversationId = parsed.conversation_id;
               }
 
+              // message event: contains answer chunks (top-level field)
               if (event === "message") {
-                // Dify returns answer chunks in data.answer
-                const answer = data.answer || "";
+                const answer = parsed.answer || "";
                 if (answer) {
                   controller.enqueue(encoder.encode(answer));
                 }
               }
 
+              // message_end: send conversation_id marker
               if (event === "message_end") {
-                // Send conversation_id to client as a special token
                 if (conversationId) {
                   controller.enqueue(
                     encoder.encode(`\n__CONV_ID__:${conversationId}\n`)
@@ -110,10 +109,11 @@ export async function POST(req: NextRequest) {
                 continue;
               }
 
+              // error event
               if (event === "error") {
-                console.error("Dify stream error:", data);
+                console.error("Dify stream error:", parsed);
                 controller.enqueue(
-                  encoder.encode(`[Error: ${data.message || "Unknown error"}]`)
+                  encoder.encode(`[Error: ${parsed.message || "Unknown error"}]`)
                 );
               }
             } catch {
@@ -127,8 +127,8 @@ export async function POST(req: NextRequest) {
           try {
             const dataStr = buffer.slice(6).trim();
             const parsed = JSON.parse(dataStr);
-            if (parsed.event === "message" && parsed.data?.answer) {
-              controller.enqueue(encoder.encode(parsed.data.answer));
+            if (parsed.event === "message" && parsed.answer) {
+              controller.enqueue(encoder.encode(parsed.answer));
             }
           } catch {
             // ignore
