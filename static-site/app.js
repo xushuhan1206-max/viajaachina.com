@@ -1147,7 +1147,7 @@ async function requestDifyFollowup(text) {
     const answer = await callDifyAgent(text, "chat");
     if (answer) addMessage("agent", answer);
   } catch (error) {
-    addMessage("agent", "Ahora mismo no pude conectar con Dify. Mantengo tu respuesta en el plan y puedes seguir usando el demo.");
+    addMessage("agent", `Ahora mismo no pude conectar con Dify. Detalle tecnico: ${error.message}. Mantengo tu respuesta en el plan y puedes seguir usando el demo.`);
   } finally {
     statusPill.textContent = "En progreso";
   }
