@@ -75,6 +75,7 @@ const destinations = [
     intro: "Gran Muralla, Ciudad Prohibida, hutongs y pato laqueado. Ideal para empezar a entender China.",
     feature: "Palacios imperiales, tramos de Gran Muralla y cultura de hutong.",
     photo: "Forbidden City Beijing Shenwumen Gate.JPG",
+    localPhoto: "assets/destinations/beijing-card.jpg",
     x: 426,
     y: 138,
     lat: 39.9042,
@@ -87,6 +88,7 @@ const destinations = [
     intro: "Rascacielos, barrios historicos, museos, compras y una entrada suave al ritmo urbano chino.",
     feature: "Bund, skyline de Pudong, museos y compras faciles para primerizos.",
     photo: "Shanghai Skyline from the Bund.jpg",
+    localPhoto: "assets/destinations/shanghai-card.jpg",
     x: 540,
     y: 270,
     lat: 31.2304,
@@ -99,6 +101,7 @@ const destinations = [
     intro: "Guerreros de terracota, muralla antigua y comida musulmana local. Muy fuerte en cultura.",
     feature: "Guerreros de terracota, muralla antigua y noodles de Shaanxi.",
     photo: "Terracotta Army, View of Pit 1.jpg",
+    localPhoto: "assets/destinations/xian-card.jpg",
     x: 358,
     y: 252,
     lat: 34.3416,
@@ -171,6 +174,7 @@ const destinations = [
     intro: "Tecnologia, diseno, compras y playas cercanas. Buena parada junto a Hong Kong.",
     feature: "Tecnologia, diseno urbano, compras y costa cercana.",
     photo: "Shenzhen Skyline from Nanshan.jpg",
+    localPhoto: "assets/destinations/shenzhen-card.jpg",
     x: 456,
     y: 402,
     lat: 22.5431,
@@ -377,8 +381,11 @@ const profileMemory = document.querySelector("#profileMemory");
 const applyProfileButton = document.querySelector("#applyProfileButton");
 const savedCities = document.querySelector("#savedCities");
 const agentMemorySummary = document.querySelector("#agentMemorySummary");
-let travelMap;
-let routeLayer;
+const openRegisterTop = document.querySelector("#openRegisterTop");
+const registerModal = document.querySelector("#registerModal");
+const closeRegisterModal = document.querySelector("#closeRegisterModal");
+const registerToast = document.querySelector("#registerToast");
+let localMapReady = false;
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -403,6 +410,35 @@ function persistAccount(status = "Guardado local") {
   } catch (error) {
     if (accountSyncStatus) accountSyncStatus.textContent = "No guardado";
   }
+}
+
+function showRegisterPrompt(reason) {
+  const messages = {
+    favorite: "Registrate para conservar tus ciudades favoritas y retomarlas desde cualquier dispositivo.",
+    chat: "Crea una cuenta para que el agente recuerde tus preferencias y preguntas importantes.",
+    top: "Pronto podras guardar favoritos, memoria personal y guias generadas en tu cuenta.",
+  };
+  if (registerToast) {
+    registerToast.textContent = messages[reason] || messages.top;
+    registerToast.classList.add("is-visible");
+    window.clearTimeout(showRegisterPrompt.timer);
+    showRegisterPrompt.timer = window.setTimeout(() => {
+      registerToast.classList.remove("is-visible");
+    }, 4200);
+  }
+}
+
+function openRegisterInfo(reason = "top") {
+  showRegisterPrompt(reason);
+  if (!registerModal) return;
+  registerModal.classList.add("is-open");
+  registerModal.setAttribute("aria-hidden", "false");
+}
+
+function closeRegisterInfo() {
+  if (!registerModal) return;
+  registerModal.classList.remove("is-open");
+  registerModal.setAttribute("aria-hidden", "true");
 }
 
 function favoriteCityNames() {
@@ -585,55 +621,34 @@ function commonsImage(fileName) {
   return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=640`;
 }
 
-function cityMarkerIcon(city) {
-  const classes = ["city-marker"];
-  if (state.favorites.has(city.id)) classes.push("is-favorite");
-  if (state.selectedCities.includes(city.id)) classes.push("is-selected");
-
-  return L.divIcon({
-    className: classes.join(" "),
-    html: `<span></span><strong>${city.name}</strong>`,
-    iconSize: [1, 1],
-    iconAnchor: [8, 8],
-  });
+function destinationPhoto(city) {
+  return city.localPhoto || commonsImage(city.photo);
 }
 
 function initRealMap() {
-  if (travelMap || !realMap) return;
+  if (localMapReady || !realMap) return;
 
-  if (!window.L) {
-    realMap.innerHTML = '<div class="empty-state"><strong>Mapa no disponible.</strong><span>Revisa la conexion para cargar el mapa real.</span></div>';
-    return;
-  }
-
-  travelMap = L.map(realMap, {
-    scrollWheelZoom: false,
-    zoomControl: true,
-  });
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(travelMap);
-
-  const chinaBounds = L.latLngBounds([18.1, 73.5], [53.8, 135.2]);
-  travelMap.fitBounds(chinaBounds, { padding: [18, 18] });
+  realMap.innerHTML = `
+    <img class="map-outline" src="assets/china-map-complete.svg" alt="Mapa completo de China" />
+    <svg class="route-overlay" viewBox="0 0 720 470" aria-hidden="true">
+      <line id="routeLine" x1="0" y1="0" x2="0" y2="0"></line>
+    </svg>
+  `;
 
   destinations.forEach((city) => {
-    const marker = L.marker([city.lat, city.lng], {
-      icon: cityMarkerIcon(city),
-      keyboard: true,
-      title: city.name,
-    })
-      .addTo(travelMap)
-      .bindTooltip(`${city.name} · ${city.region}`, {
-        direction: "top",
-        offset: [0, -12],
-      })
-      .on("click", () => toggleSelectedCity(city.id));
-
-    markerLayers.set(city.id, marker);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "map-city-point";
+    button.style.left = `${(city.x / 720) * 100}%`;
+    button.style.top = `${(city.y / 470) * 100}%`;
+    button.setAttribute("aria-label", `Seleccionar ${city.name}`);
+    button.innerHTML = `<span></span><strong>${city.name}</strong>`;
+    button.addEventListener("click", () => toggleSelectedCity(city.id));
+    realMap.appendChild(button);
+    markerLayers.set(city.id, button);
   });
+
+  localMapReady = true;
 }
 
 function toggleFavorite(cityId) {
@@ -646,6 +661,7 @@ function toggleFavorite(cityId) {
   renderDestinations();
   renderMap();
   renderAccount(false);
+  showRegisterPrompt("favorite");
 }
 
 function toggleSelectedCity(cityId) {
@@ -671,7 +687,7 @@ function renderDestinations() {
     card.setAttribute("aria-label", `Seleccionar ${city.name}`);
 
     card.innerHTML = `
-      <img class="destination-image" src="${commonsImage(city.photo)}" data-fallback="${cityImage(city)}" alt="${city.name}" loading="eager" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=this.dataset.fallback;" />
+      <img class="destination-image" src="${destinationPhoto(city)}" data-fallback="${cityImage(city)}" alt="${city.name}" loading="eager" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=this.dataset.fallback;" />
       <div class="destination-body">
         <div class="destination-top">
           <div>
@@ -714,37 +730,26 @@ function renderMap() {
   const selected = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
 
   markerLayers.forEach((marker, cityId) => {
-    const city = destinations.find((item) => item.id === cityId);
-    marker.setIcon(cityMarkerIcon(city));
+    marker.classList.toggle("is-favorite", state.favorites.has(cityId));
+    marker.classList.toggle("is-selected", state.selectedCities.includes(cityId));
   });
 
-  if (routeLayer && travelMap) {
-    routeLayer.removeFrom(travelMap);
-    routeLayer = null;
-  }
-
   if (selected.length === 2) {
-    if (travelMap) {
-      routeLayer = L.polyline(
-        [
-          [selected[0].lat, selected[0].lng],
-          [selected[1].lat, selected[1].lng],
-        ],
-        {
-          color: "#c84630",
-          weight: 5,
-          opacity: 0.9,
-          dashArray: "10 10",
-        },
-      ).addTo(travelMap);
-      travelMap.fitBounds(routeLayer.getBounds(), { padding: [80, 80], maxZoom: 6 });
+    const routeLine = document.querySelector("#routeLine");
+    if (routeLine) {
+      routeLine.setAttribute("x1", selected[0].x);
+      routeLine.setAttribute("y1", selected[0].y);
+      routeLine.setAttribute("x2", selected[1].x);
+      routeLine.setAttribute("y2", selected[1].y);
+      routeLine.classList.add("is-visible");
     }
     routeTitle.textContent = `${selected[0].name} -> ${selected[1].name}`;
     routeDescription.textContent = `Tiempo estimado: ${estimateRoute(selected[0], selected[1])}. Recomendacion: revisar disponibilidad con pasaporte y dejar margen para llegar a la estacion.`;
     cityFeatures.innerHTML = selected.map((city) => `<li><strong>${city.name}:</strong> ${city.feature}</li>`).join("");
   } else {
-    if (travelMap) {
-      travelMap.fitBounds(L.latLngBounds([18.1, 73.5], [53.8, 135.2]), { padding: [18, 18] });
+    const routeLine = document.querySelector("#routeLine");
+    if (routeLine) {
+      routeLine.classList.remove("is-visible");
     }
     routeTitle.textContent = selected.length === 1 ? `Origen: ${selected[0].name}` : "Selecciona dos puntos";
     routeDescription.textContent =
@@ -811,6 +816,7 @@ function handleAnswer(text) {
   if (!cleanText) return;
 
   addMessage("user", cleanText);
+  showRegisterPrompt("chat");
   if (state.step < 0) {
     setIntent(cleanText);
     return;
@@ -1019,11 +1025,20 @@ chatForm.addEventListener("submit", (event) => {
 
 generateButton.addEventListener("click", generateItinerary);
 resetTop.addEventListener("click", resetFlow);
-accountForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  saveAccountFromForm();
-});
-applyProfileButton.addEventListener("click", applyAccountToTrip);
+if (accountForm) {
+  accountForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveAccountFromForm();
+  });
+}
+if (applyProfileButton) applyProfileButton.addEventListener("click", applyAccountToTrip);
+if (openRegisterTop) openRegisterTop.addEventListener("click", () => openRegisterInfo("top"));
+if (closeRegisterModal) closeRegisterModal.addEventListener("click", closeRegisterInfo);
+if (registerModal) {
+  registerModal.addEventListener("click", (event) => {
+    if (event.target === registerModal) closeRegisterInfo();
+  });
+}
 
 loadAccount();
 resetFlow();

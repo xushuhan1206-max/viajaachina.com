@@ -4,13 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>viajaachina - Asistente de viaje AI</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <section class="hero" aria-label="Planificador de viaje a China">
-        <img class="hero-image" src="assets/china-facil-hero.png" alt="Viaje a China con telefono y mapa" />
+        <video class="hero-image" autoplay muted loop playsinline preload="metadata" aria-label="Viaje por China">
+          <source src="assets/hero-bg.mp4" type="video/mp4" />
+        </video>
         <div class="hero-overlay"></div>
         <nav class="topbar" aria-label="Navegacion principal">
           <a class="brand" href="#">
@@ -19,7 +20,7 @@
           </a>
           <div class="nav-actions">
             <button class="icon-button" type="button" title="Idioma">ES</button>
-            <a class="ghost-button nav-link" href="#accountSection">Cuenta demo</a>
+            <button class="ghost-button" type="button" id="openRegisterTop">Registrarse</button>
             <button class="ghost-button" type="button" id="resetTop">Nuevo viaje</button>
           </div>
         </nav>
@@ -65,85 +66,6 @@
         </div>
       </section>
 
-      <section class="account-section" id="accountSection" aria-label="Cuenta del viajero">
-        <div class="section-heading account-heading">
-          <div>
-            <p>Cuenta demo</p>
-            <h2>Perfil, favoritos y memoria personal</h2>
-          </div>
-          <span class="sync-pill" id="accountSyncStatus">Guardado local</span>
-        </div>
-
-        <div class="account-layout">
-          <aside class="account-overview">
-            <div class="avatar-mark" aria-hidden="true">VA</div>
-            <h3 id="accountDisplayName">Viajero invitado</h3>
-            <p id="accountDisplayEmail">demo@viajaachina.com</p>
-            <div class="account-stats" id="accountStats">
-              <span>Favoritos: 0</span>
-              <span>Memorias: 0</span>
-            </div>
-          </aside>
-
-          <form class="account-form" id="accountForm">
-            <label>
-              Nombre
-              <input id="profileName" name="profileName" type="text" autocomplete="name" placeholder="Ej. Sofia" />
-            </label>
-            <label>
-              Email
-              <input id="profileEmail" name="profileEmail" type="email" autocomplete="email" placeholder="sofia@email.com" />
-            </label>
-            <label>
-              Estilo de viaje
-              <select id="profileStyle" name="profileStyle">
-                <option value="Primer viaje practico">Primer viaje practico</option>
-                <option value="Cultura e historia">Cultura e historia</option>
-                <option value="Comida local">Comida local</option>
-                <option value="Naturaleza y fotos">Naturaleza y fotos</option>
-                <option value="Compras y ciudad moderna">Compras y ciudad moderna</option>
-              </select>
-            </label>
-            <label>
-              Presupuesto preferido
-              <select id="profileBudget" name="profileBudget">
-                <option value="Equilibrado">Equilibrado</option>
-                <option value="Economico">Economico</option>
-                <option value="Comodo">Comodo</option>
-              </select>
-            </label>
-            <label class="wide-field">
-              Intereses principales
-              <input id="profileInterests" name="profileInterests" type="text" placeholder="Historia, comida, naturaleza..." />
-            </label>
-            <label class="wide-field">
-              Memoria personal para el agente
-              <textarea
-                id="profileMemory"
-                name="profileMemory"
-                rows="5"
-                placeholder="Ej. No me gusta cambiar de hotel muchas veces. Prefiero tren antes que avion. Necesito opciones sin picante."
-              ></textarea>
-            </label>
-            <div class="account-actions wide-field">
-              <button class="primary-button" type="submit">Guardar perfil</button>
-              <button class="secondary-button" id="applyProfileButton" type="button">Usar en el viaje</button>
-            </div>
-          </form>
-
-          <aside class="memory-panel">
-            <h3>Ciudades guardadas</h3>
-            <div class="saved-cities" id="savedCities">
-              <span class="muted-note">Marca ciudades con la estrella para verlas aqui.</span>
-            </div>
-            <h3>Resumen para el agente</h3>
-            <p id="agentMemorySummary">
-              El agente usara este perfil para personalizar rutas, pagos, transporte y recomendaciones.
-            </p>
-          </aside>
-        </div>
-      </section>
-
       <section class="destinations" aria-label="Destinos populares en China">
         <div class="section-heading destinations-heading">
           <p>Explora destinos</p>
@@ -159,7 +81,7 @@
         </div>
         <div class="map-layout">
           <div class="china-map" id="chinaMap">
-            <div id="realMap" aria-label="Mapa real de China con destinos populares"></div>
+            <div id="realMap" aria-label="Mapa interactivo de China con destinos populares"></div>
           </div>
           <aside class="route-info">
             <h3 id="routeTitle">Selecciona dos puntos</h3>
@@ -200,7 +122,23 @@
       </section>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div class="register-toast" id="registerToast" role="status" aria-live="polite"></div>
+    <div class="register-modal" id="registerModal" aria-hidden="true">
+      <div class="register-modal-card" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
+        <button class="modal-close" id="closeRegisterModal" type="button" aria-label="Cerrar">×</button>
+        <p class="panel-kicker">Cuenta viajaachina</p>
+        <h2 id="registerTitle">Guarda tus favoritos y memoria de viaje</h2>
+        <p>
+          Próximamente podrás registrarte para conservar ciudades guardadas, preferencias,
+          historial de preguntas y memoria personal del agente entre sesiones.
+        </p>
+        <div class="register-benefits">
+          <span>Favoritos sincronizados</span>
+          <span>Preferencias persistentes</span>
+          <span>Guías más personalizadas</span>
+        </div>
+      </div>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>
