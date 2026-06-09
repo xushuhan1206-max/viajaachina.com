@@ -604,6 +604,17 @@ function currentQuestion() {
   return questions.filter((question) => !question.hidden)[state.step];
 }
 
+function visibleQuestions() {
+  return questions.filter((question) => !question.hidden);
+}
+
+function advancePastAnswered() {
+  const visible = visibleQuestions();
+  while (state.step >= 0 && state.step < visible.length && state.answers[visible[state.step].key] !== "Pendiente") {
+    state.step += 1;
+  }
+}
+
 function renderQuickReplies() {
   quickReplies.innerHTML = "";
   if (state.step < 0) {
@@ -611,7 +622,7 @@ function renderQuickReplies() {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = intent.label;
-      button.addEventListener("click", () => handleAnswer(intent.label));
+      button.addEventListener("click", () => handleAnswer(intent.label, { askAgent: false }));
       quickReplies.appendChild(button);
     });
     return;
@@ -624,7 +635,7 @@ function renderQuickReplies() {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = reply;
-    button.addEventListener("click", () => handleAnswer(reply));
+    button.addEventListener("click", () => handleAnswer(reply, { askAgent: false }));
     quickReplies.appendChild(button);
   });
 }
@@ -640,6 +651,72 @@ function renderPreferences() {
     row.append(term, definition);
     preferenceList.appendChild(row);
   });
+}
+
+function extractTripHints(text) {
+  const normalized = text.toLowerCase();
+  const hints = {};
+
+  const durationMatch = normalized.match(/(\d{1,2})\s*(dias|días|days|jour)/);
+  if (durationMatch) hints.duration = `${durationMatch[1]} dias`;
+
+  if (normalized.includes("solo")) hints.travelers = "Solo";
+  if (normalized.includes("pareja")) hints.travelers = "Pareja";
+  if (normalized.includes("amigos")) hints.travelers = "Amigos";
+  if (normalized.includes("familia")) hints.travelers = "Familia";
+
+  if (normalized.includes("econom")) hints.budget = "Economico";
+  if (normalized.includes("equilibr") || normalized.includes("medio")) hints.budget = "Equilibrado";
+  if (normalized.includes("comodo") || normalized.includes("cómodo") || normalized.includes("premium")) hints.budget = "Comodo";
+
+  const interests = [];
+  if (normalized.includes("historia") || normalized.includes("cultura")) interests.push("Historia y cultura");
+  if (normalized.includes("comida") || normalized.includes("gastronom")) interests.push("Comida local");
+  if (normalized.includes("naturaleza")) interests.push("Naturaleza");
+  if (normalized.includes("compras")) interests.push("Compras");
+  if (normalized.includes("vida nocturna")) interests.push("Vida nocturna");
+  if (interests.length) hints.interests = [...new Set(interests)].join(", ");
+
+  const cities = destinations
+    .filter((city) => {
+      const cityName = city.name.toLowerCase();
+      const cityId = city.id.toLowerCase();
+      return normalized.includes(cityName) || normalized.includes(cityId) || (city.id === "beijing" && normalized.includes("pekin"));
+    })
+    .map((city) => city.name);
+  if (cities.length) hints.cities = [...new Set(cities)].join(" + ");
+
+  const support = [];
+  if (normalized.includes("pago") || normalized.includes("alipay") || normalized.includes("wechat")) support.push("Pagos");
+  if (normalized.includes("tren") || normalized.includes("metro") || normalized.includes("transporte")) support.push("Trenes y metro");
+  if (normalized.includes("entrada") || normalized.includes("reserva")) support.push("Entradas");
+  if (normalized.includes("app") || normalized.includes("idioma") || normalized.includes("frase")) support.push("Idioma y apps");
+  if (support.length) hints.support = [...new Set(support)].join(", ");
+
+  if (normalized.includes("primera vez") || normalized.includes("no se") || normalized.includes("no sé")) {
+    hints.intent = "Planificar mi viaje";
+  }
+
+  return hints;
+}
+
+function applyTripHints(text) {
+  const hints = extractTripHints(text);
+  const changed = [];
+
+  Object.entries(hints).forEach(([key, value]) => {
+    if (value && state.answers[key] !== value) {
+      state.answers[key] = value;
+      changed.push(key);
+    }
+  });
+
+  if (changed.length) {
+    renderPreferences();
+    advancePastAnswered();
+  }
+
+  return changed;
 }
 
 function routeKey(a, b) {
@@ -1065,6 +1142,7 @@ function setIntent(text) {
 
 async function requestDifyFollowup(text) {
   statusPill.textContent = "IA";
+  addMessage("agent", "Estoy consultando el agente de viajaachina...");
   try {
     const answer = await callDifyAgent(text, "chat");
     if (answer) addMessage("agent", answer);
@@ -1075,24 +1153,33 @@ async function requestDifyFollowup(text) {
   }
 }
 
-function handleAnswer(text) {
+function handleAnswer(text, options = {}) {
+  const { askAgent = true } = options;
   const cleanText = text.trim();
   if (!cleanText) return;
 
   addMessage("user", cleanText);
   showRegisterPrompt("chat");
+  const shouldAskAgent = askAgent && cleanText.length > 24;
+  const changedByHints = applyTripHints(cleanText);
+
   if (state.step < 0) {
     setIntent(cleanText);
+    if (shouldAskAgent) requestDifyFollowup(cleanText);
     return;
   }
 
   const question = currentQuestion();
 
   if (question) {
-    state.answers[question.key] = cleanText;
-    state.step += 1;
-    renderPreferences();
+    if (!changedByHints.includes(question.key)) {
+      state.answers[question.key] = cleanText;
+      state.step += 1;
+      renderPreferences();
+    }
+    advancePastAnswered();
     window.setTimeout(askNextQuestion, 260);
+    if (shouldAskAgent) requestDifyFollowup(cleanText);
   } else {
     requestDifyFollowup(cleanText);
   }
