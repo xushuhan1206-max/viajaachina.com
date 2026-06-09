@@ -340,6 +340,7 @@ const state = {
   step: -1,
   favorites: new Set(),
   selectedCities: [],
+  difyConversationId: "",
   account: { ...defaultAccount },
   answers: {
     intent: "Pendiente",
@@ -385,7 +386,13 @@ const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
-let localMapReady = false;
+
+const CHINA_GEOJSON_URL = "https://geojson.cn/api/china/100000.json";
+const MAP_VIEWBOX = { width: 720, height: 470, padding: 28 };
+
+let chinaGeojson = null;
+let geojsonLoading = null;
+let mapProjection = null;
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -393,6 +400,7 @@ function loadAccount() {
     const stored = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
     const parsed = stored ? JSON.parse(stored) : {};
     state.account = { ...defaultAccount, ...parsed };
+    state.difyConversationId = window.localStorage.getItem("viajaachina:dify_conversation_id") || "";
   } catch (error) {
     state.account = { ...defaultAccount };
   }
@@ -517,6 +525,80 @@ function addMessage(role, text) {
   messages.scrollTop = messages.scrollHeight;
 }
 
+function selectedCityNames() {
+  return state.selectedCities
+    .map((id) => destinations.find((city) => city.id === id))
+    .filter(Boolean)
+    .map((city) => city.name);
+}
+
+function agentContext(mode = "chat") {
+  return {
+    mode,
+    ...state.answers,
+    favorites: favoriteCityNames(),
+    selectedCities: selectedCityNames(),
+    travelStyle: state.account.travelStyle,
+    memory: state.account.memory,
+  };
+}
+
+async function callDifyAgent(message, mode = "chat") {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      context: agentContext(mode),
+      conversationId: state.difyConversationId,
+      userId: state.account.email || "viajaachina-demo",
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Dify request failed");
+  if (data.conversationId) {
+    state.difyConversationId = data.conversationId;
+    window.localStorage.setItem("viajaachina:dify_conversation_id", data.conversationId);
+  }
+  return data.answer || "";
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderDifyItinerary(answer) {
+  const blocks = answer
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  itineraryContent.innerHTML = blocks
+    .map((block, index) => {
+      const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+      const [first, ...rest] = lines;
+      const title = first.replace(/^#+\s*/, "");
+      const body = rest.length ? rest : [first];
+      return `
+        <article class="trip-card">
+          ${index === 0 ? `<h3>${escapeHtml(title)}</h3>` : ""}
+          ${body
+            .map((line) => {
+              const clean = line.replace(/^[-*]\s*/, "");
+              return `<p>${escapeHtml(clean)}</p>`;
+            })
+            .join("")}
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function currentQuestion() {
   if (state.step < 0) return null;
   return questions.filter((question) => !question.hidden)[state.step];
@@ -625,30 +707,214 @@ function destinationPhoto(city) {
   return city.localPhoto || commonsImage(city.photo);
 }
 
-function initRealMap() {
-  if (localMapReady || !realMap) return;
-
+function mapConfigState(title, text) {
+  if (!realMap) return;
   realMap.innerHTML = `
-    <img class="map-outline" src="assets/china-map-complete.svg" alt="Mapa completo de China" />
-    <svg class="route-overlay" viewBox="0 0 720 470" aria-hidden="true">
-      <line id="routeLine" x1="0" y1="0" x2="0" y2="0"></line>
-    </svg>
+    <div class="map-config-state">
+      <div>
+        <h3>${title}</h3>
+        <p>${text}</p>
+      </div>
+    </div>
   `;
+}
 
-  destinations.forEach((city) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "map-city-point";
-    button.style.left = `${(city.x / 720) * 100}%`;
-    button.style.top = `${(city.y / 470) * 100}%`;
-    button.setAttribute("aria-label", `Seleccionar ${city.name}`);
-    button.innerHTML = `<span></span><strong>${city.name}</strong>`;
-    button.addEventListener("click", () => toggleSelectedCity(city.id));
-    realMap.appendChild(button);
-    markerLayers.set(city.id, button);
+function walkCoordinates(coordinates, callback) {
+  if (!coordinates) return;
+  if (typeof coordinates[0] === "number") {
+    callback(coordinates);
+    return;
+  }
+  coordinates.forEach((item) => walkCoordinates(item, callback));
+}
+
+function mercatorY(lat) {
+  const rad = Math.max(Math.min(lat, 85), -85) * Math.PI / 180;
+  return Math.log(Math.tan(Math.PI / 4 + rad / 2));
+}
+
+function buildProjection(geojson) {
+  const bounds = {
+    minLng: Infinity,
+    maxLng: -Infinity,
+    minY: Infinity,
+    maxY: -Infinity,
+  };
+
+  geojson.features.forEach((feature) => {
+    walkCoordinates(feature.geometry?.coordinates, ([lng, lat]) => {
+      const y = mercatorY(lat);
+      bounds.minLng = Math.min(bounds.minLng, lng);
+      bounds.maxLng = Math.max(bounds.maxLng, lng);
+      bounds.minY = Math.min(bounds.minY, y);
+      bounds.maxY = Math.max(bounds.maxY, y);
+    });
   });
 
-  localMapReady = true;
+  const { width, height, padding } = MAP_VIEWBOX;
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+  const scale = Math.min(
+    usableWidth / (bounds.maxLng - bounds.minLng),
+    usableHeight / (bounds.maxY - bounds.minY),
+  );
+  const mapWidth = (bounds.maxLng - bounds.minLng) * scale;
+  const mapHeight = (bounds.maxY - bounds.minY) * scale;
+  const offsetX = (width - mapWidth) / 2;
+  const offsetY = (height - mapHeight) / 2;
+
+  return ([lng, lat]) => {
+    const y = mercatorY(lat);
+    return [
+      offsetX + (lng - bounds.minLng) * scale,
+      offsetY + (bounds.maxY - y) * scale,
+    ];
+  };
+}
+
+function ringPath(ring, project) {
+  return ring
+    .map((coord, index) => {
+      const [x, y] = project(coord);
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ") + " Z";
+}
+
+function geometryPath(geometry, project) {
+  if (!geometry) return "";
+  if (geometry.type === "Polygon") {
+    return geometry.coordinates.map((ring) => ringPath(ring, project)).join(" ");
+  }
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates
+      .flatMap((polygon) => polygon.map((ring) => ringPath(ring, project)))
+      .join(" ");
+  }
+  return "";
+}
+
+function createSvgElement(tagName, attributes = {}) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+  return element;
+}
+
+async function loadChinaGeojson() {
+  if (chinaGeojson) return chinaGeojson;
+  if (geojsonLoading) return geojsonLoading;
+
+  geojsonLoading = fetch(CHINA_GEOJSON_URL)
+    .then((response) => {
+      if (!response.ok) throw new Error("GeoJSON request failed");
+      return response.json();
+    })
+    .then((data) => {
+      chinaGeojson = data;
+      return data;
+    });
+
+  return geojsonLoading;
+}
+
+function renderGeojsonMap(geojson) {
+  if (!realMap) return;
+  mapProjection = buildProjection(geojson);
+  markerLayers.clear();
+
+  const svg = createSvgElement("svg", {
+    class: "geo-map",
+    viewBox: `0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`,
+    role: "img",
+    "aria-label": "Mapa de China con ciudades populares",
+  });
+  const provincesLayer = createSvgElement("g", { class: "geo-provinces" });
+  const routeLine = createSvgElement("line", {
+    id: "geoRouteLine",
+    class: "geo-route-line",
+    x1: "0",
+    y1: "0",
+    x2: "0",
+    y2: "0",
+  });
+  const citiesLayer = createSvgElement("g", { class: "geo-cities" });
+
+  geojson.features.forEach((feature) => {
+    const path = createSvgElement("path", {
+      class: "geo-province",
+      d: geometryPath(feature.geometry, mapProjection),
+    });
+    provincesLayer.appendChild(path);
+  });
+
+  destinations.forEach((city) => {
+    const [x, y] = mapProjection([city.lng, city.lat]);
+    const marker = createSvgElement("g", {
+      class: "geo-city-marker",
+      tabindex: "0",
+      role: "button",
+      "aria-label": `Seleccionar ${city.name}`,
+      transform: `translate(${x.toFixed(2)} ${y.toFixed(2)})`,
+    });
+    const circle = createSvgElement("circle", { r: "7", cx: "0", cy: "0" });
+    const label = createSvgElement("text", { x: "11", y: "4" });
+    label.textContent = city.name;
+    marker.append(circle, label);
+    marker.addEventListener("click", () => toggleSelectedCity(city.id));
+    marker.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleSelectedCity(city.id);
+      }
+    });
+    citiesLayer.appendChild(marker);
+    markerLayers.set(city.id, marker);
+  });
+
+  svg.append(provincesLayer, routeLine, citiesLayer);
+  realMap.replaceChildren(svg);
+}
+
+function updateGeojsonMarkers() {
+  markerLayers.forEach((marker, cityId) => {
+    marker.classList.toggle("is-favorite", state.favorites.has(cityId));
+    marker.classList.toggle("is-selected", state.selectedCities.includes(cityId));
+  });
+}
+
+function updateGeojsonRoute(selected) {
+  const routeLine = document.querySelector("#geoRouteLine");
+  if (!routeLine || !mapProjection) return;
+
+  if (selected.length === 2) {
+    const [x1, y1] = mapProjection([selected[0].lng, selected[0].lat]);
+    const [x2, y2] = mapProjection([selected[1].lng, selected[1].lat]);
+    routeLine.setAttribute("x1", x1.toFixed(2));
+    routeLine.setAttribute("y1", y1.toFixed(2));
+    routeLine.setAttribute("x2", x2.toFixed(2));
+    routeLine.setAttribute("y2", y2.toFixed(2));
+    routeLine.classList.add("is-visible");
+  } else {
+    routeLine.classList.remove("is-visible");
+  }
+}
+
+async function initRealMap() {
+  if (!realMap || chinaGeojson || geojsonLoading) return;
+
+  mapConfigState("Cargando mapa de China", "Usando datos GeoJSON gratuitos de geojson.cn.");
+
+  try {
+    const geojson = await loadChinaGeojson();
+    renderGeojsonMap(geojson);
+    renderMap();
+  } catch (error) {
+    geojsonLoading = null;
+    mapConfigState(
+      "No se pudo cargar el mapa",
+      "No se pudo conectar con geojson.cn. Puedes volver a intentar mas tarde o guardar el GeoJSON como archivo local.",
+    );
+  }
 }
 
 function toggleFavorite(cityId) {
@@ -729,28 +995,14 @@ function renderMap() {
   initRealMap();
   const selected = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
 
-  markerLayers.forEach((marker, cityId) => {
-    marker.classList.toggle("is-favorite", state.favorites.has(cityId));
-    marker.classList.toggle("is-selected", state.selectedCities.includes(cityId));
-  });
+  updateGeojsonMarkers();
+  updateGeojsonRoute(selected);
 
   if (selected.length === 2) {
-    const routeLine = document.querySelector("#routeLine");
-    if (routeLine) {
-      routeLine.setAttribute("x1", selected[0].x);
-      routeLine.setAttribute("y1", selected[0].y);
-      routeLine.setAttribute("x2", selected[1].x);
-      routeLine.setAttribute("y2", selected[1].y);
-      routeLine.classList.add("is-visible");
-    }
     routeTitle.textContent = `${selected[0].name} -> ${selected[1].name}`;
     routeDescription.textContent = `Tiempo estimado: ${estimateRoute(selected[0], selected[1])}. Recomendacion: revisar disponibilidad con pasaporte y dejar margen para llegar a la estacion.`;
     cityFeatures.innerHTML = selected.map((city) => `<li><strong>${city.name}:</strong> ${city.feature}</li>`).join("");
   } else {
-    const routeLine = document.querySelector("#routeLine");
-    if (routeLine) {
-      routeLine.classList.remove("is-visible");
-    }
     routeTitle.textContent = selected.length === 1 ? `Origen: ${selected[0].name}` : "Selecciona dos puntos";
     routeDescription.textContent =
       selected.length === 1
@@ -811,6 +1063,18 @@ function setIntent(text) {
   window.setTimeout(askNextQuestion, 260);
 }
 
+async function requestDifyFollowup(text) {
+  statusPill.textContent = "IA";
+  try {
+    const answer = await callDifyAgent(text, "chat");
+    if (answer) addMessage("agent", answer);
+  } catch (error) {
+    addMessage("agent", "Ahora mismo no pude conectar con Dify. Mantengo tu respuesta en el plan y puedes seguir usando el demo.");
+  } finally {
+    statusPill.textContent = "En progreso";
+  }
+}
+
 function handleAnswer(text) {
   const cleanText = text.trim();
   if (!cleanText) return;
@@ -830,8 +1094,7 @@ function handleAnswer(text) {
     renderPreferences();
     window.setTimeout(askNextQuestion, 260);
   } else {
-    const intent = detectIntent(cleanText);
-    addMessage("agent", `Anotado. Lo trato como: ${intent.label}. Si quieres, puedo regenerar la guia con este ajuste.`);
+    requestDifyFollowup(cleanText);
   }
 }
 
@@ -893,7 +1156,7 @@ function cityFeaturesForPlan(cityNames) {
     .join("");
 }
 
-function generateItinerary() {
+async function generateItinerary() {
   const cities = cityPlan();
   const duration = state.answers.duration === "Pendiente" ? "8 dias" : state.answers.duration;
   const budget = state.answers.budget === "Pendiente" ? "Equilibrado" : state.answers.budget;
@@ -903,7 +1166,41 @@ function generateItinerary() {
   const modules = readinessModules();
   const memory = state.account.memory || defaultAccount.memory;
 
-  statusPill.textContent = "Generado";
+  statusPill.textContent = "Generando";
+  itineraryContent.innerHTML = `
+    <div class="empty-state">
+      <strong>Generando guia con IA...</strong>
+      <span>Estoy combinando tus preferencias, ciudades guardadas, transporte, pagos y entradas.</span>
+    </div>
+  `;
+
+  try {
+    const prompt = `
+Genera una guia completa de viaje a China en espanol para un viajero hispanohablante.
+
+Contexto:
+- Intencion: ${intent}
+- Duracion: ${duration}
+- Presupuesto: ${budget}
+- Intereses: ${interests}
+- Ayuda prioritaria: ${support}
+- Ciudades sugeridas: ${cities.join(", ")}
+- Favoritos: ${favoriteCityNames().join(", ") || "ninguno"}
+- Ciudades seleccionadas en el mapa: ${selectedCityNames().join(", ") || "ninguna"}
+- Memoria del usuario: ${memory}
+
+Incluye: ruta por dias, por que elegir cada ciudad, transporte entre ciudades, entradas/reservas, pagos, apps utiles, frases basicas en chino con traduccion, checklist final y advertencias practicas para turistas extranjeros.
+    `.trim();
+    const answer = await callDifyAgent(prompt, "itinerary");
+    if (answer) {
+      renderDifyItinerary(answer);
+      statusPill.textContent = "Generado";
+      return;
+    }
+  } catch (error) {
+    statusPill.textContent = "Demo";
+  }
+
   itineraryContent.innerHTML = `
     <article class="trip-card">
       <h3>Guia completa · ${intent}</h3>
