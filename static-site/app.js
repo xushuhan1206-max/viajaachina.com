@@ -1076,6 +1076,60 @@ function renderGeojsonMap(geojson) {
   realMap.replaceChildren(svg);
 }
 
+function renderLocalMap() {
+  if (!realMap) return;
+  mapProjection = null;
+  markerLayers.clear();
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "local-map";
+
+  const image = document.createElement("img");
+  image.className = "local-map-outline";
+  image.src = "assets/china-map-complete.svg";
+  image.alt = "Mapa completo de China";
+
+  const svg = createSvgElement("svg", {
+    class: "geo-map local-map-overlay",
+    viewBox: `0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`,
+    role: "img",
+    "aria-label": "Mapa interactivo de China con ciudades populares",
+  });
+  const routeLine = createSvgElement("polyline", {
+    id: "geoRouteLine",
+    class: "geo-route-line",
+    points: "",
+  });
+  const citiesLayer = createSvgElement("g", { class: "geo-cities" });
+
+  destinations.forEach((city) => {
+    const marker = createSvgElement("g", {
+      class: "geo-city-marker",
+      tabindex: "0",
+      role: "button",
+      "aria-label": `Seleccionar ${city.name}`,
+      transform: `translate(${city.x} ${city.y})`,
+    });
+    const circle = createSvgElement("circle", { r: "7", cx: "0", cy: "0" });
+    const label = createSvgElement("text", { x: "11", y: "4" });
+    label.textContent = city.name;
+    marker.append(circle, label);
+    marker.addEventListener("click", () => toggleSelectedCity(city.id));
+    marker.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleSelectedCity(city.id);
+      }
+    });
+    citiesLayer.appendChild(marker);
+    markerLayers.set(city.id, marker);
+  });
+
+  svg.append(routeLine, citiesLayer);
+  wrapper.append(image, svg);
+  realMap.replaceChildren(wrapper);
+}
+
 function updateGeojsonMarkers() {
   markerLayers.forEach((marker, cityId) => {
     marker.classList.toggle("is-favorite", state.favorites.has(cityId));
@@ -1090,7 +1144,7 @@ function updateGeojsonRoute(selected) {
   if (selected.length >= 2) {
     const points = selected
       .map((city) => {
-        const [x, y] = mapProjection([city.lng, city.lat]);
+        const [x, y] = mapProjection ? mapProjection([city.lng, city.lat]) : [city.x, city.y];
         return `${x.toFixed(2)},${y.toFixed(2)}`;
       })
       .join(" ");
@@ -1103,21 +1157,8 @@ function updateGeojsonRoute(selected) {
 }
 
 async function initRealMap() {
-  if (!realMap || chinaGeojson || geojsonLoading) return;
-
-  mapConfigState("Cargando mapa de China", "Usando datos GeoJSON gratuitos de geojson.cn.");
-
-  try {
-    const geojson = await loadChinaGeojson();
-    renderGeojsonMap(geojson);
-    renderMap();
-  } catch (error) {
-    geojsonLoading = null;
-    mapConfigState(
-      "No se pudo cargar el mapa",
-      "No se pudo conectar con geojson.cn. Puedes volver a intentar mas tarde o guardar el GeoJSON como archivo local.",
-    );
-  }
+  if (!realMap || markerLayers.size) return;
+  renderLocalMap();
 }
 
 function toggleFavorite(cityId) {

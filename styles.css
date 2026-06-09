@@ -688,6 +688,30 @@ button {
   display: block;
 }
 
+.local-map {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  height: 100%;
+}
+
+.local-map-outline,
+.local-map-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.local-map-outline {
+  object-fit: contain;
+}
+
+.local-map-overlay {
+  z-index: 2;
+  pointer-events: none;
+}
+
 .geo-province {
   fill: rgba(255, 255, 255, 0.86);
   stroke: rgba(15, 118, 110, 0.38);
@@ -724,6 +748,7 @@ button {
 .geo-city-marker {
   cursor: pointer;
   outline: none;
+  pointer-events: auto;
 }
 
 .geo-city-marker circle {
