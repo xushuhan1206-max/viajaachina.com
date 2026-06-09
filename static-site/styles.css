@@ -703,9 +703,11 @@ button {
 }
 
 .geo-route-line {
+  fill: none;
   stroke: var(--red);
   stroke-width: 0;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: 11 8;
   opacity: 0;
   pointer-events: none;
@@ -790,6 +792,42 @@ button {
   padding-left: 10px;
   color: var(--muted);
   line-height: 1.42;
+}
+
+.transport-segment {
+  border-left-color: var(--red);
+}
+
+.transport-options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.transport-options span {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fbfa;
+}
+
+.transport-options b {
+  color: var(--ink);
+}
+
+.transport-options em,
+.transport-options small,
+.transport-options i {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.transport-options small {
+  color: var(--jade-dark);
+  font-weight: 800;
 }
 
 .route-stats {

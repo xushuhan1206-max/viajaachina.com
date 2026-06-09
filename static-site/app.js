@@ -266,24 +266,79 @@ const destinations = [
   },
 ];
 
-const knownRoutes = {
-  "beijing-shanghai": "4 h 30 min en tren de alta velocidad",
-  "beijing-xian": "4 h 15 min en tren de alta velocidad",
-  "beijing-chengdu": "2 h 50 min en avion",
-  "hangzhou-shanghai": "45 min en tren de alta velocidad",
-  "shanghai-suzhou": "25 min en tren de alta velocidad",
-  "shanghai-xian": "6 h en tren de alta velocidad",
-  "chengdu-xian": "3 h 15 min en tren de alta velocidad",
-  "chengdu-chongqing": "1 h 20 min en tren de alta velocidad",
-  "chongqing-zhangjiajie": "4 h 30 min combinando tren y traslado",
-  "guangzhou-shenzhen": "35 min en tren de alta velocidad",
-  "hongkong-shenzhen": "20 min en tren transfronterizo",
-  "guangzhou-hongkong": "1 h en tren de alta velocidad",
-  "guangzhou-guilin": "2 h 45 min en tren de alta velocidad",
-  "kunming-lijiang": "3 h 30 min en tren",
-  "chengdu-kunming": "5 h 30 min en tren de alta velocidad",
-  "beijing-harbin": "5 h 30 min en tren de alta velocidad",
-  "beijing-qingdao": "3 h 30 min en tren de alta velocidad",
+const transportRoutes = {
+  "beijing-shanghai": [
+    { mode: "Tren G", time: "4 h 30 min - 5 h 45 min", price: "¥553-669", note: "Mejor equilibrio para primer viaje." },
+    { mode: "Avion", time: "2 h 15 min vuelo + traslados", price: "¥600-1,300", note: "Ahorra poco tiempo real si incluyes aeropuertos." },
+  ],
+  "beijing-xian": [
+    { mode: "Tren G", time: "4 h 15 min - 5 h 30 min", price: "¥515-600", note: "Ruta historica clasica." },
+    { mode: "Avion", time: "2 h 10 min vuelo + traslados", price: "¥500-1,100", note: "Util si el horario de tren no encaja." },
+  ],
+  "beijing-chengdu": [
+    { mode: "Avion", time: "2 h 50 min vuelo + traslados", price: "¥650-1,500", note: "Opcion mas practica." },
+    { mode: "Tren G", time: "7 h 30 min - 10 h", price: "¥778-1,000", note: "Solo si quieres evitar vuelos internos." },
+  ],
+  "beijing-harbin": [
+    { mode: "Tren G", time: "5 h - 6 h", price: "¥306-600", note: "Bueno en temporada de hielo." },
+    { mode: "Avion", time: "2 h vuelo + traslados", price: "¥500-1,200", note: "Mas sensible al clima de invierno." },
+  ],
+  "beijing-qingdao": [
+    { mode: "Tren G", time: "3 h 15 min - 4 h", price: "¥314-370", note: "Comodo para costa norte." },
+    { mode: "Avion", time: "1 h 30 min vuelo + traslados", price: "¥400-900", note: "Normalmente no compensa tanto." },
+  ],
+  "shanghai-xian": [
+    { mode: "Tren G", time: "6 h - 7 h 30 min", price: "¥669-800", note: "Conecta modernidad e historia." },
+    { mode: "Avion", time: "2 h 30 min vuelo + traslados", price: "¥500-1,200", note: "Mejor si viajas con pocos dias." },
+  ],
+  "hangzhou-shanghai": [
+    { mode: "Tren G", time: "45 min - 1 h", price: "¥73-90", note: "Excursion facil desde Shanghai." },
+    { mode: "Coche", time: "2 h - 2 h 30 min", price: "¥500-800", note: "Solo recomendable con equipaje o grupo." },
+  ],
+  "shanghai-suzhou": [
+    { mode: "Tren G/D", time: "25 - 40 min", price: "¥35-45", note: "La excursion mas sencilla desde Shanghai." },
+    { mode: "Coche", time: "1 h 30 min - 2 h", price: "¥350-600", note: "Evitar horas punta." },
+  ],
+  "chengdu-xian": [
+    { mode: "Tren G/D", time: "3 h 15 min - 4 h", price: "¥263-397", note: "Muy buena conexion interior." },
+    { mode: "Avion", time: "1 h 35 min vuelo + traslados", price: "¥400-900", note: "No siempre compensa frente al tren." },
+  ],
+  "chengdu-chongqing": [
+    { mode: "Tren G/D", time: "1 h - 1 h 30 min", price: "¥96-154", note: "Tramo ideal para alta velocidad." },
+    { mode: "Coche", time: "3 h 30 min - 4 h", price: "¥500-800", note: "Solo si haces paradas intermedias." },
+  ],
+  "chengdu-kunming": [
+    { mode: "Tren G/D", time: "5 h 30 min - 6 h 30 min", price: "¥470-560", note: "Buena entrada hacia Yunnan." },
+    { mode: "Avion", time: "1 h 35 min vuelo + traslados", price: "¥450-1,000", note: "Ahorra tiempo si no quieres medio dia de tren." },
+  ],
+  "chongqing-zhangjiajie": [
+    { mode: "Tren + traslado", time: "4 h 30 min - 6 h", price: "¥220-380", note: "Revisar estacion exacta y traslado al parque." },
+    { mode: "Avion", time: "1 h 10 min vuelo + traslados", price: "¥450-1,100", note: "Frecuencias menos constantes." },
+  ],
+  "guangzhou-shenzhen": [
+    { mode: "Tren G/C", time: "30 - 45 min", price: "¥74-100", note: "Conexion urbana del sur." },
+    { mode: "Metro/coche", time: "1 h 30 min - 2 h 30 min", price: "¥80-500", note: "Depende mucho del origen exacto." },
+  ],
+  "hongkong-shenzhen": [
+    { mode: "Tren transfronterizo", time: "15 - 25 min", price: "¥68-90", note: "Requiere control fronterizo." },
+    { mode: "Metro + frontera", time: "1 h - 1 h 40 min", price: "¥30-80", note: "Mas barato, menos directo." },
+  ],
+  "guangzhou-hongkong": [
+    { mode: "Tren G", time: "50 min - 1 h 15 min", price: "¥215-250", note: "Requiere documento valido para Hong Kong." },
+    { mode: "Bus", time: "3 h - 4 h", price: "¥100-180", note: "Mas economico, mas lento." },
+  ],
+  "guangzhou-guilin": [
+    { mode: "Tren D/G", time: "2 h 45 min - 3 h 30 min", price: "¥165-220", note: "Comodo para naturaleza karstica." },
+    { mode: "Avion", time: "1 h 15 min vuelo + traslados", price: "¥400-900", note: "Normalmente no compensa salvo oferta." },
+  ],
+  "kunming-lijiang": [
+    { mode: "Tren", time: "3 h 15 min - 3 h 50 min", price: "¥220-260", note: "Ruta clasica de Yunnan." },
+    { mode: "Avion", time: "1 h vuelo + traslados", price: "¥350-900", note: "Solo si el itinerario va muy justo." },
+  ],
+  "guilin-zhangjiajie": [
+    { mode: "Tren + traslado", time: "6 h - 8 h", price: "¥280-450", note: "Revisar combinacion diaria." },
+    { mode: "Avion", time: "1 h 20 min vuelo + traslados", price: "¥500-1,200", note: "Frecuencias variables." },
+  ],
 };
 
 const ACCOUNT_STORAGE_KEY = "viajaachina-demo-account";
@@ -723,15 +778,81 @@ function routeKey(a, b) {
   return [a, b].sort().join("-");
 }
 
-function estimateRoute(a, b) {
-  const exact = knownRoutes[routeKey(a.id, b.id)];
-  if (exact) return exact;
+function distanceKm(a, b) {
+  const earthRadius = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const lat1 = a.lat * Math.PI / 180;
+  const lat2 = b.lat * Math.PI / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return Math.round(earthRadius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)));
+}
 
-  const distance = Math.hypot(a.x - b.x, a.y - b.y);
-  if (distance < 95) return "1-2 h en tren de alta velocidad";
-  if (distance < 180) return "3-5 h en tren de alta velocidad";
-  if (distance < 285) return "5-8 h en tren o 2 h en avion";
-  return "2-3 h en avion recomendado";
+function fallbackTransportOptions(a, b) {
+  const km = distanceKm(a, b);
+  if (km < 260) {
+    return [
+      {
+        mode: "Tren regional/G",
+        time: "1 h - 2 h 30 min",
+        price: "¥40-180",
+        note: `Referencia para ${km} km. Verificar estacion exacta.`,
+      },
+      {
+        mode: "Coche",
+        time: "2 h - 4 h",
+        price: "¥400-900",
+        note: "Puede convenir para grupos o equipaje.",
+      },
+    ];
+  }
+  if (km < 900) {
+    return [
+      {
+        mode: "Tren G/D",
+        time: "3 h - 6 h",
+        price: "¥180-550",
+        note: `Referencia para ${km} km. Suele ser la opcion mas estable.`,
+      },
+      {
+        mode: "Avion",
+        time: "1 h 30 min vuelo + traslados",
+        price: "¥450-1,100",
+        note: "Comparar si viajas con poco tiempo.",
+      },
+    ];
+  }
+  return [
+    {
+      mode: "Avion",
+      time: "2 h - 3 h vuelo + traslados",
+      price: "¥600-1,600",
+      note: `Referencia para ${km} km. Normalmente es lo mas practico.`,
+    },
+    {
+      mode: "Tren G/D",
+      time: "7 h - 12 h",
+      price: "¥500-1,000",
+      note: "Solo recomendable si prefieres evitar vuelos.",
+    },
+  ];
+}
+
+function transportOptions(a, b) {
+  return transportRoutes[routeKey(a.id, b.id)] || fallbackTransportOptions(a, b);
+}
+
+function routeSegments(selected) {
+  return selected.slice(0, -1).map((city, index) => {
+    const next = selected[index + 1];
+    return {
+      from: city,
+      to: next,
+      options: transportOptions(city, next),
+    };
+  });
 }
 
 function cityImage(city) {
@@ -799,10 +920,16 @@ function mapConfigState(title, text) {
 function walkCoordinates(coordinates, callback) {
   if (!coordinates) return;
   if (typeof coordinates[0] === "number") {
-    callback(coordinates);
+    callback(normalizeGeoCoordinate(coordinates));
     return;
   }
   coordinates.forEach((item) => walkCoordinates(item, callback));
+}
+
+function normalizeGeoCoordinate(coord) {
+  const [first, second] = coord;
+  const looksSwapped = first >= 15 && first <= 55 && second >= 70 && second <= 140;
+  return looksSwapped ? [second, first] : [first, second];
 }
 
 function mercatorY(lat) {
@@ -852,7 +979,7 @@ function buildProjection(geojson) {
 function ringPath(ring, project) {
   return ring
     .map((coord, index) => {
-      const [x, y] = project(coord);
+      const [x, y] = project(normalizeGeoCoordinate(coord));
       return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ") + " Z";
@@ -906,13 +1033,10 @@ function renderGeojsonMap(geojson) {
     "aria-label": "Mapa de China con ciudades populares",
   });
   const provincesLayer = createSvgElement("g", { class: "geo-provinces" });
-  const routeLine = createSvgElement("line", {
+  const routeLine = createSvgElement("polyline", {
     id: "geoRouteLine",
     class: "geo-route-line",
-    x1: "0",
-    y1: "0",
-    x2: "0",
-    y2: "0",
+    points: "",
   });
   const citiesLayer = createSvgElement("g", { class: "geo-cities" });
 
@@ -963,15 +1087,17 @@ function updateGeojsonRoute(selected) {
   const routeLine = document.querySelector("#geoRouteLine");
   if (!routeLine || !mapProjection) return;
 
-  if (selected.length === 2) {
-    const [x1, y1] = mapProjection([selected[0].lng, selected[0].lat]);
-    const [x2, y2] = mapProjection([selected[1].lng, selected[1].lat]);
-    routeLine.setAttribute("x1", x1.toFixed(2));
-    routeLine.setAttribute("y1", y1.toFixed(2));
-    routeLine.setAttribute("x2", x2.toFixed(2));
-    routeLine.setAttribute("y2", y2.toFixed(2));
+  if (selected.length >= 2) {
+    const points = selected
+      .map((city) => {
+        const [x, y] = mapProjection([city.lng, city.lat]);
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      })
+      .join(" ");
+    routeLine.setAttribute("points", points);
     routeLine.classList.add("is-visible");
   } else {
+    routeLine.setAttribute("points", "");
     routeLine.classList.remove("is-visible");
   }
 }
@@ -1011,7 +1137,6 @@ function toggleSelectedCity(cityId) {
   if (state.selectedCities.includes(cityId)) {
     state.selectedCities = state.selectedCities.filter((id) => id !== cityId);
   } else {
-    if (state.selectedCities.length === 2) state.selectedCities.shift();
     state.selectedCities.push(cityId);
   }
   renderDestinations();
@@ -1071,26 +1196,51 @@ function renderDestinations() {
 function renderMap() {
   initRealMap();
   const selected = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
+  const segments = routeSegments(selected);
 
   updateGeojsonMarkers();
   updateGeojsonRoute(selected);
 
-  if (selected.length === 2) {
-    routeTitle.textContent = `${selected[0].name} -> ${selected[1].name}`;
-    routeDescription.textContent = `Tiempo estimado: ${estimateRoute(selected[0], selected[1])}. Recomendacion: revisar disponibilidad con pasaporte y dejar margen para llegar a la estacion.`;
-    cityFeatures.innerHTML = selected.map((city) => `<li><strong>${city.name}:</strong> ${city.feature}</li>`).join("");
+  if (selected.length >= 2) {
+    routeTitle.textContent = selected.map((city) => city.name).join(" -> ");
+    routeDescription.textContent =
+      "Ruta por orden de seleccion. Los precios son referencias en RMB para planificacion inicial; revisar horarios y disponibilidad antes de comprar.";
+    cityFeatures.innerHTML = segments
+      .map(
+        (segment, index) => `
+          <li class="transport-segment">
+            <strong>${index + 1}. ${segment.from.name} -> ${segment.to.name}</strong>
+            <div class="transport-options">
+              ${segment.options
+                .map(
+                  (option) => `
+                    <span>
+                      <b>${option.mode}</b>
+                      <em>${option.time}</em>
+                      <small>${option.price}</small>
+                      <i>${option.note}</i>
+                    </span>
+                  `,
+                )
+                .join("")}
+            </div>
+          </li>
+        `,
+      )
+      .join("");
   } else {
-    routeTitle.textContent = selected.length === 1 ? `Origen: ${selected[0].name}` : "Selecciona dos puntos";
+    routeTitle.textContent = selected.length === 1 ? `Origen: ${selected[0].name}` : "Selecciona tu ruta";
     routeDescription.textContent =
       selected.length === 1
-        ? "Elige una segunda ciudad para ver la ruta y el tiempo estimado de transporte."
-        : "Las ciudades guardadas aparecen con una segunda marca. Al elegir dos ciudades, la ruta se ilumina y veras el tiempo estimado en tren o avion.";
+        ? "Elige la siguiente ciudad para ver opciones de tren, avion o traslado."
+        : "Toca ciudades en orden. Las ciudades guardadas tienen marca secundaria y la ruta seleccionada se dibuja sobre el mapa.";
     cityFeatures.innerHTML = selected.length === 1 ? `<li><strong>${selected[0].name}:</strong> ${selected[0].feature}</li>` : "";
   }
 
   routeStats.innerHTML = `
     <span>Favoritos: ${state.favorites.size}</span>
-    <span>Seleccionadas: ${state.selectedCities.length}/2</span>
+    <span>Seleccionadas: ${state.selectedCities.length}</span>
+    <span>Tramos: ${Math.max(state.selectedCities.length - 1, 0)}</span>
   `;
 }
 
