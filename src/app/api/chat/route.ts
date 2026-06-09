@@ -146,10 +146,11 @@ export async function POST(req: NextRequest) {
         "Transfer-Encoding": "chunked",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Chat API error:", error);
     return Response.json(
-      { error: `Internal server error: ${error?.message || String(error)}` },
+      { error: `Internal server error: ${errorMessage}` },
       { status: 500 }
     );
   }

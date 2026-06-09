@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import AuthModal from "./AuthModal";
 
@@ -10,123 +10,223 @@ export default function Header() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [showMenu, setShowMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
-    // Get initial session
+    if (!supabase) return;
+
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
 
-    // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
+
+  const openLogin = () => {
+    setAuthMode("login");
+    setShowAuth(true);
+    setShowMobileMenu(false);
+  };
+
+  const openSignup = () => {
+    setAuthMode("signup");
+    setShowAuth(true);
+    setShowMobileMenu(false);
+  };
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setShowMobileMenu(false);
+    setShowUserMenu(false);
+  };
 
   const handleLogout = async () => {
-    setShowMenu(false);
+    setShowUserMenu(false);
+    if (!supabase) return;
     await supabase.auth.signOut();
   };
 
-  const openLogin = () => { setAuthMode("login"); setShowAuth(true); };
-  const openSignup = () => { setAuthMode("signup"); setShowAuth(true); };
+  const navItems = [
+    { label: "Ciudades", action: () => scrollToSection("ciudades") },
+    { label: "Guías", action: () => scrollToSection("guias") },
+    { label: "Mapa", action: () => scrollToSection("mapa") },
+  ];
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="text-xl font-bold">
-          <span className="text-[#C62828]">Viaja</span>
-          <span className="text-[#FFB300]">AChina</span>
-        </Link>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[rgba(15,23,42,0.78)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1120px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="text-xl font-bold tracking-[-0.03em]">
+              <span className="text-white">China</span>
+              <span className="text-[var(--imperial-gold)]">Viaja</span>
+            </div>
+          </Link>
 
-        {/* Right side */}
-        <div className="flex items-center gap-4">
-          {/* Nav links - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-5">
-            <Link href="#ciudades" className="text-sm text-gray-500 font-medium hover:text-[#C62828] transition-colors">
-              Ciudades
-            </Link>
-            <Link href="#guias" className="text-sm text-gray-500 font-medium hover:text-[#C62828] transition-colors">
-              Guías
-            </Link>
-            <Link href="#mapa" className="text-sm text-gray-500 font-medium hover:text-[#C62828] transition-colors">
-              Mapa
-            </Link>
+          <nav className="hidden items-center gap-6 lg:flex">
+            {navItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className="text-sm font-medium text-white/72 transition-colors hover:text-[var(--china-red)]"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-3 lg:flex">
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent("open-chat"));
+                setShowUserMenu(false);
+                setShowMobileMenu(false);
+              }}
+              className="rounded-full bg-[var(--china-red)] px-4 py-2 text-sm font-semibold text-white transition hover:scale-105"
+            >
+              Chat con IA
+            </button>
+
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu((prev) => !prev)}
+                  className="flex items-center gap-3 rounded-full border border-white/12 bg-white/8 px-3 py-2 text-left text-white backdrop-blur-xl transition hover:bg-white/12"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--imperial-gold)] text-sm font-semibold text-[var(--slate-900)]">
+                    {(user.email?.[0] || "U").toUpperCase()}
+                  </span>
+                  <span className="max-w-[180px] truncate text-sm text-white/80">{user.email}</span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 top-14 w-72 rounded-[24px] border border-white/10 bg-[rgba(15,23,42,0.95)] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
+                    <div className="rounded-[20px] bg-white/6 p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-white/45">Conectado como</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-white">{user.email}</p>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <button
+                        onClick={() => scrollToSection("favoritos")}
+                        className="w-full rounded-2xl px-4 py-3 text-left text-sm text-white/72 transition hover:bg-white/6 hover:text-[var(--imperial-gold)]"
+                      >
+                        Ver mis favoritos
+                      </button>
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("open-chat"));
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full rounded-2xl px-4 py-3 text-left text-sm text-white/72 transition hover:bg-white/6 hover:text-[var(--imperial-gold)]"
+                      >
+                        Abrir asistente IA
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full rounded-2xl px-4 py-3 text-left text-sm text-[var(--china-red)] transition hover:bg-[rgba(194,65,12,0.12)]"
+                      >
+                        Cerrar sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={openLogin}
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/72 transition hover:text-white"
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={openSignup}
+                  className="rounded-full border border-[rgba(244,183,64,0.35)] bg-[rgba(244,183,64,0.12)] px-4 py-2 text-sm font-semibold text-[var(--imperial-gold)] transition hover:bg-[rgba(244,183,64,0.22)]"
+                >
+                  Registrarse
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Auth section */}
-          {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="w-8 h-8 rounded-full bg-[#C62828] text-white text-sm font-bold flex items-center justify-center hover:scale-105 transition-transform"
-              >
-                {(user.email?.[0] || "U").toUpperCase()}
-              </button>
-              {showMenu && (
-                <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-[12px] text-gray-400">Conectado como</p>
-                    <p className="text-[13px] font-medium truncate">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => { setShowMenu(false); /* TODO: link to /mi-viaje */ }}
-                    className="w-full text-left px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    🗺️ Mi viaje
-                  </button>
-                  <button
-                    onClick={() => { setShowMenu(false); /* TODO: link to /perfil */ }}
-                    className="w-full text-left px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    ⚙️ Mi perfil
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    ↗️ Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={openLogin}
-                className="text-sm font-medium text-gray-500 hover:text-[#C62828] transition-colors"
-              >
-                Iniciar sesión
-              </button>
-              <button
-                onClick={openSignup}
-                className="bg-[#C62828] text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#B71C1C] transition-colors"
-              >
-                Registrarse
-              </button>
-            </div>
-          )}
-
-          {/* Chat button */}
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent("open-chat"))}
-            className="bg-[#C62828] text-white px-4 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform hidden sm:block"
+            onClick={() => setShowMobileMenu((prev) => !prev)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/8 text-white backdrop-blur-xl lg:hidden"
+            aria-label="Abrir menú"
           >
-            🤖 Chat con IA
+            <span className="space-y-1.5">
+              <span className="block h-0.5 w-5 rounded-full bg-current" />
+              <span className="block h-0.5 w-5 rounded-full bg-current" />
+              <span className="block h-0.5 w-5 rounded-full bg-current" />
+            </span>
           </button>
         </div>
-      </nav>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuth}
-        onClose={() => setShowAuth(false)}
-        initialMode={authMode}
-      />
+        {showMobileMenu && (
+          <div className="border-t border-white/10 bg-[rgba(15,23,42,0.95)] px-4 py-4 shadow-[0_20px_40px_rgba(0,0,0,0.22)] lg:hidden">
+            <div className="mx-auto max-w-[1120px] space-y-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={item.action}
+                  className="w-full rounded-2xl px-4 py-3 text-left text-sm font-medium text-white/78 transition hover:bg-white/6 hover:text-[var(--imperial-gold)]"
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("open-chat"));
+                  setShowMobileMenu(false);
+                }}
+                className="w-full rounded-2xl bg-[var(--china-red)] px-4 py-3 text-sm font-semibold text-white"
+              >
+                Abrir IA
+              </button>
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => scrollToSection("favoritos")}
+                      className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/78"
+                    >
+                      Favoritos
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="rounded-2xl border border-[rgba(194,65,12,0.24)] px-4 py-3 text-sm font-semibold text-[var(--china-red)]"
+                    >
+                      Salir
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={openLogin}
+                      className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/78"
+                    >
+                      Iniciar sesión
+                    </button>
+                    <button
+                      onClick={openSignup}
+                      className="rounded-2xl bg-[rgba(244,183,64,0.14)] px-4 py-3 text-sm font-semibold text-[var(--imperial-gold)]"
+                    >
+                      Registrarse
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} initialMode={authMode} />
     </>
   );
 }

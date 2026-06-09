@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 470" role="img" aria-label="Mapa completo de China">
+  <defs>
+    <linearGradient id="land" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f8f4e8"/>
+      <stop offset="1" stop-color="#e7f2ef"/>
+    </linearGradient>
+    <style>
+      .mainland{fill:url(#land);stroke:#315b56;stroke-width:2.5;stroke-linejoin:round}
+      .province{fill:none;stroke:#7fa19b;stroke-width:1;opacity:.55}
+      .island{fill:#f8f4e8;stroke:#315b56;stroke-width:1.7}
+      .dash{fill:none;stroke:#315b56;stroke-width:1.4;stroke-dasharray:5 6;opacity:.55}
+      .sea{fill:#dfeaf0}
+      .label{font:700 11px system-ui,sans-serif;fill:#476963}
+    </style>
+  </defs>
+  <rect class="sea" width="720" height="470" rx="18"/>
+  <path class="mainland" d="M93 132 139 84 206 59 282 65 343 47 426 66 483 51 558 83 613 139 650 196 626 250 645 308 611 357 546 396 479 383 424 409 353 421 290 392 224 416 158 386 116 334 75 300 80 237 59 191Z"/>
+  <path class="province" d="M139 84 178 138 169 202 214 238 203 310 224 416"/>
+  <path class="province" d="M206 59 236 126 282 158 281 228 332 259 353 421"/>
+  <path class="province" d="M343 47 340 116 382 162 369 230 426 276 424 409"/>
+  <path class="province" d="M426 66 435 132 482 165 471 230 512 286 479 383"/>
+  <path class="province" d="M558 83 529 143 550 202 522 266 546 396"/>
+  <path class="province" d="M93 132 163 151 226 142 282 158 340 116 426 132 529 143 613 139"/>
+  <path class="province" d="M75 300 158 286 214 238 281 228 369 230 471 230 626 250"/>
+  <path class="province" d="M116 334 203 310 332 259 426 276 512 286 645 308"/>
+  <path class="province" d="M158 386 290 392 353 348 424 360 546 396"/>
+  <path class="island" d="M462 398c7-4 15-4 20 1 5 6 2 14-6 17-8 4-17 1-20-5-3-5 0-10 6-13Z"/>
+  <path class="island" d="M590 328c13-6 26-2 31 10 6 15-3 38-18 58-14-18-26-38-20-54 2-6 4-11 7-14Z"/>
+  <circle class="island" cx="452" cy="412" r="3"/>
+  <circle class="island" cx="466" cy="414" r="2.5"/>
+  <circle class="island" cx="486" cy="426" r="2.4"/>
+  <circle class="island" cx="509" cy="433" r="2.2"/>
+  <circle class="island" cx="530" cy="444" r="2.1"/>
+  <path class="dash" d="M438 388c23 16 58 25 92 24 34-2 68-17 91-40"/>
+  <text class="label" x="585" y="322">Taiwan</text>
+  <text class="label" x="478" y="399">Hainan</text>
+  <text class="label" x="510" y="454">Mar del Sur</text>
+</svg>

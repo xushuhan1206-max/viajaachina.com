@@ -12,15 +12,15 @@ export const metadata: Metadata = {
     "China sin visa",
     "guía China español",
     "viaje China",
-    "viajachina",
+    "viajaachina",
   ],
-  metadataBase: new URL("https://viajachina.com"),
+  metadataBase: new URL("https://viajaachina.com"),
   openGraph: {
     title: "ViajaAChina — Tu guía de viaje a China con IA",
     description: "Planifica tu viaje a China con inteligencia artificial. Todo en español.",
     locale: "es_ES",
     type: "website",
-    url: "https://viajachina.com",
+    url: "https://viajaachina.com",
   },
 };
 

@@ -1,46 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --red: #C62828;
-  --red-light: #FFEBEE;
-  --gold: #FFB300;
-  --gold-light: #FFF8E1;
-  --dark: #1A1A2E;
-  --dark2: #2D1B3D;
-  --white: #FAFAF8;
-  --green: #2E7D32;
-  --green-light: #E8F5E9;
-  --purple: #534AB7;
-  --purple-light: #EEEDFE;
+  --ink-blue: #12355B;
+  --ink-blue-strong: #0f2844;
+  --jade: #0F766E;
+  --jade-soft: #d8f1ec;
+  --china-red: #C2410C;
+  --imperial-gold: #F4B740;
+  --cinnabar: #C2410C;
+  --porcelain: #F8FAFC;
+  --warm-rice: #FFFBF3;
+  --slate-900: #0F172A;
+  --slate-700: #334155;
+  --slate-500: #64748B;
+  --slate-300: #CBD5E1;
+  --border: #E2E8F0;
+  --white: #ffffff;
+  --shadow-soft: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow-hover: 0 20px 48px rgba(15, 23, 42, 0.12);
+  --radius-pill: 999px;
+  --radius-card: 24px;
+  --radius-panel: 32px;
 }
 
 @theme inline {
-  --color-background: var(--white);
-  --color-foreground: #1a1a1a;
-  --color-red: #C62828;
-  --color-red-light: #FFEBEE;
-  --color-gold: #FFB300;
-  --color-gold-light: #FFF8E1;
-  --color-dark: #1A1A2E;
-  --color-dark2: #2D1B3D;
-  --color-green: #2E7D32;
-  --color-green-light: #E8F5E9;
-  --color-purple: #534AB7;
-  --color-purple-light: #EEEDFE;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-background: var(--porcelain);
+  --color-foreground: var(--slate-900);
+  --color-ink: var(--ink-blue);
+  --color-ink-strong: var(--ink-blue-strong);
+  --color-jade: var(--jade);
+  --color-jade-soft: var(--jade-soft);
+  --color-cinnabar: var(--cinnabar);
+  --color-porcelain: var(--porcelain);
+  --color-warm-rice: var(--warm-rice);
+  --color-slate-900: var(--slate-900);
+  --color-slate-700: var(--slate-700);
+  --color-slate-500: var(--slate-500);
+  --color-slate-300: var(--slate-300);
+  --color-border: var(--border);
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--white);
-  color: #1a1a1a;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(194, 65, 12, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(244, 183, 64, 0.08), transparent 22%),
+    linear-gradient(180deg, #fffaf1 0%, var(--porcelain) 42%, #ffffff 100%);
+  color: var(--slate-900);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.6;
 }
 
@@ -48,4 +64,52 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.16);
+  color: var(--ink-blue-strong);
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.oriental-contours {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 260'%3E%3Cpath d='M0 200C100 180 140 145 220 145C310 145 340 200 430 200C510 200 560 130 665 130C760 130 780 180 885 180C985 180 1070 95 1200 110' fill='none' stroke='%23f4b740' stroke-width='2' stroke-linecap='round' opacity='0.28'/%3E%3Cpath d='M0 225C85 225 170 190 255 190C350 190 410 232 495 232C600 232 630 165 740 165C855 165 900 220 1005 220C1085 220 1140 205 1200 185' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' opacity='0.18'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center bottom;
+}
+
+.surface-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.soft-shadow {
+  box-shadow: var(--shadow-soft);
+}
+
+.soft-shadow-hover {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.soft-shadow-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }

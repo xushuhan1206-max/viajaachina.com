@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>viajaachina - Asistente de viaje AI</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-label="Planificador de viaje a China">
+        <img class="hero-image" src="assets/china-facil-hero.png" alt="Viaje a China con telefono y mapa" />
+        <div class="hero-overlay"></div>
+        <nav class="topbar" aria-label="Navegacion principal">
+          <a class="brand" href="#">
+            <span class="brand-mark">中</span>
+            viajaachina
+          </a>
+          <div class="nav-actions">
+            <button class="icon-button" type="button" title="Idioma">ES</button>
+            <a class="ghost-button nav-link" href="#accountSection">Cuenta demo</a>
+            <button class="ghost-button" type="button" id="resetTop">Nuevo viaje</button>
+          </div>
+        </nav>
+
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="eyebrow">AI travel planner para hispanohablantes</p>
+            <h1>viajaachina</h1>
+            <p>
+              Convierte una conversacion corta en una ruta clara para viajar por China:
+              ciudades, entradas, transporte, pagos y consejos practicos.
+            </p>
+          </div>
+
+          <section class="chat-panel" aria-label="Chatflow de planificacion">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Chatflow</p>
+                <h2>Cuéntame tu viaje</h2>
+              </div>
+              <span class="status-pill" id="statusPill">En progreso</span>
+            </div>
+
+            <div class="messages" id="messages" aria-live="polite"></div>
+
+            <form class="composer" id="chatForm">
+              <input
+                id="chatInput"
+                name="message"
+                type="text"
+                autocomplete="off"
+                placeholder="Escribe tu respuesta..."
+                aria-label="Respuesta del viajero"
+              />
+              <button type="submit" title="Enviar">
+                <span aria-hidden="true">→</span>
+                <span class="sr-only">Enviar</span>
+              </button>
+            </form>
+
+            <div class="quick-replies" id="quickReplies" aria-label="Respuestas rapidas"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="account-section" id="accountSection" aria-label="Cuenta del viajero">
+        <div class="section-heading account-heading">
+          <div>
+            <p>Cuenta demo</p>
+            <h2>Perfil, favoritos y memoria personal</h2>
+          </div>
+          <span class="sync-pill" id="accountSyncStatus">Guardado local</span>
+        </div>
+
+        <div class="account-layout">
+          <aside class="account-overview">
+            <div class="avatar-mark" aria-hidden="true">VA</div>
+            <h3 id="accountDisplayName">Viajero invitado</h3>
+            <p id="accountDisplayEmail">demo@viajaachina.com</p>
+            <div class="account-stats" id="accountStats">
+              <span>Favoritos: 0</span>
+              <span>Memorias: 0</span>
+            </div>
+          </aside>
+
+          <form class="account-form" id="accountForm">
+            <label>
+              Nombre
+              <input id="profileName" name="profileName" type="text" autocomplete="name" placeholder="Ej. Sofia" />
+            </label>
+            <label>
+              Email
+              <input id="profileEmail" name="profileEmail" type="email" autocomplete="email" placeholder="sofia@email.com" />
+            </label>
+            <label>
+              Estilo de viaje
+              <select id="profileStyle" name="profileStyle">
+                <option value="Primer viaje practico">Primer viaje practico</option>
+                <option value="Cultura e historia">Cultura e historia</option>
+                <option value="Comida local">Comida local</option>
+                <option value="Naturaleza y fotos">Naturaleza y fotos</option>
+                <option value="Compras y ciudad moderna">Compras y ciudad moderna</option>
+              </select>
+            </label>
+            <label>
+              Presupuesto preferido
+              <select id="profileBudget" name="profileBudget">
+                <option value="Equilibrado">Equilibrado</option>
+                <option value="Economico">Economico</option>
+                <option value="Comodo">Comodo</option>
+              </select>
+            </label>
+            <label class="wide-field">
+              Intereses principales
+              <input id="profileInterests" name="profileInterests" type="text" placeholder="Historia, comida, naturaleza..." />
+            </label>
+            <label class="wide-field">
+              Memoria personal para el agente
+              <textarea
+                id="profileMemory"
+                name="profileMemory"
+                rows="5"
+                placeholder="Ej. No me gusta cambiar de hotel muchas veces. Prefiero tren antes que avion. Necesito opciones sin picante."
+              ></textarea>
+            </label>
+            <div class="account-actions wide-field">
+              <button class="primary-button" type="submit">Guardar perfil</button>
+              <button class="secondary-button" id="applyProfileButton" type="button">Usar en el viaje</button>
+            </div>
+          </form>
+
+          <aside class="memory-panel">
+            <h3>Ciudades guardadas</h3>
+            <div class="saved-cities" id="savedCities">
+              <span class="muted-note">Marca ciudades con la estrella para verlas aqui.</span>
+            </div>
+            <h3>Resumen para el agente</h3>
+            <p id="agentMemorySummary">
+              El agente usara este perfil para personalizar rutas, pagos, transporte y recomendaciones.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="destinations" aria-label="Destinos populares en China">
+        <div class="section-heading destinations-heading">
+          <p>Explora destinos</p>
+          <h2>16 ciudades populares para tu ruta</h2>
+        </div>
+        <div class="destination-grid" id="destinationGrid"></div>
+      </section>
+
+      <section class="route-planner" aria-label="Mapa interactivo de ciudades">
+        <div class="section-heading">
+          <p>Mapa de ruta</p>
+          <h2>Elige dos ciudades para comparar transporte</h2>
+        </div>
+        <div class="map-layout">
+          <div class="china-map" id="chinaMap">
+            <div id="realMap" aria-label="Mapa real de China con destinos populares"></div>
+          </div>
+          <aside class="route-info">
+            <h3 id="routeTitle">Selecciona dos puntos</h3>
+            <p id="routeDescription">
+              Las ciudades guardadas aparecen con una segunda marca. Al elegir dos ciudades, la ruta se ilumina y veras el tiempo estimado en tren o avion.
+            </p>
+            <ul class="city-feature-list" id="cityFeatures"></ul>
+            <div class="route-stats" id="routeStats">
+              <span>Favoritos: 0</span>
+              <span>Seleccionadas: 0/2</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Resultado de la planificacion">
+        <aside class="summary">
+          <div class="section-heading">
+            <p>Perfil del viaje</p>
+            <h2>Preferencias detectadas</h2>
+          </div>
+          <dl class="preference-list" id="preferenceList"></dl>
+          <button class="primary-button" id="generateButton" type="button">Generar itinerario</button>
+        </aside>
+
+        <section class="itinerary" aria-label="Itinerario generado">
+          <div class="section-heading">
+            <p>Plan generado</p>
+            <h2>Ruta recomendada</h2>
+          </div>
+          <div id="itineraryContent" class="itinerary-content">
+            <div class="empty-state">
+              <strong>Tu guia aparecera aqui.</strong>
+              <span>Completa el chatflow o genera una version inicial con lo que ya sabemos.</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
