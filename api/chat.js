@@ -45,7 +45,7 @@ export default async function handler(request, response) {
       }),
     });
 
-    const data = await difyResponse.json();
+    const data = await difyResponse.json().catch(() => ({}));
 
     if (!difyResponse.ok) {
       return response.status(difyResponse.status).json({
@@ -59,6 +59,8 @@ export default async function handler(request, response) {
       messageId: data.message_id || "",
     });
   } catch (error) {
-    return response.status(500).json({ error: "Unable to call Dify" });
+    return response.status(500).json({
+      error: error instanceof Error ? error.message : "Unable to call Dify",
+    });
   }
 }
