@@ -1,27 +1,42 @@
 const intentOptions = [
   {
     id: "route_planning",
-    label: "Planificar mi viaje",
-    reply: "Perfecto. Primero voy a entender tus fechas, intereses y nivel de comodidad. Despues creare una ruta completa.",
+    label: "Crear ruta",
+    reply: "Perfecto. Voy a ordenar tus fechas, ciudades e intereses para crear una ruta realista.",
   },
   {
     id: "city_discovery",
-    label: "No se adonde ir",
-    reply: "Bien. Te ayudare a elegir ciudades segun tu estilo de viaje, no por una lista generica.",
+    label: "Elegir ciudades",
+    reply: "Bien. Primero voy a entender tus gustos para recomendar ciudades que realmente encajen contigo.",
   },
   {
-    id: "china_readiness",
-    label: "Prepararme para China",
-    reply: "Vamos a revisar lo practico: pagos, transporte, entradas, apps y frases utiles.",
+    id: "payment_help",
+    label: "Pagos en China",
+    reply: "Vamos a resolver pagos de forma practica: Alipay, WeChat Pay, tarjetas y plan B.",
+  },
+  {
+    id: "transport_help",
+    label: "Trenes y transporte",
+    reply: "Te ayudo a decidir tren, avion, metro o Didi segun tu ruta y nivel de comodidad.",
+  },
+  {
+    id: "tickets_help",
+    label: "Entradas y reservas",
+    reply: "Te ayudo a saber que reservar, con cuanta antelacion y que hacer si se agota.",
+  },
+  {
+    id: "prep_help",
+    label: "Prepararme",
+    reply: "Vamos a revisar lo practico antes de viajar: entrada, pagos, conectividad, apps y riesgos.",
   },
   {
     id: "general_question",
-    label: "Preguntar algo",
+    label: "Pregunta libre",
     reply: "Claro. Respondo tu duda y, si falta contexto para una guia completa, te hare pocas preguntas.",
   },
 ];
 
-const questions = [
+const baseQuestions = [
   {
     key: "intent",
     label: "Objetivo",
@@ -66,6 +81,65 @@ const questions = [
     replies: ["Pagos", "Trenes y metro", "Entradas", "Idioma y apps"],
   },
 ];
+
+const questionFlows = {
+  route_planning: ["duration", "cities", "interests", "budget", "travelers", "support"],
+  city_discovery: ["interests", "budget", "travelers", "duration", "cities"],
+  payment_help: ["support", "travelers", "duration", "cities"],
+  transport_help: ["cities", "duration", "budget", "support"],
+  tickets_help: ["cities", "duration", "support"],
+  prep_help: ["support", "duration", "travelers", "cities"],
+  general_question: ["support", "duration", "interests"],
+};
+
+const questionOverrides = {
+  city_discovery: {
+    interests: {
+      prompt: "¿Que tipo de viaje te atrae mas?",
+      replies: ["Historia y cultura", "Comida local", "Naturaleza", "Ciudades modernas", "Viaje familiar"],
+    },
+    budget: {
+      prompt: "¿Que nivel de presupuesto te gustaria mantener?",
+      replies: ["Economico", "Equilibrado", "Comodo"],
+    },
+    travelers: {
+      prompt: "¿Con quien viajas? Esto cambia mucho la recomendacion de ciudades.",
+      replies: ["Solo", "Pareja", "Amigos", "Familia"],
+    },
+    duration: {
+      prompt: "¿Cuantos dias tienes aproximadamente?",
+      replies: ["5-7 dias", "8-10 dias", "12-15 dias", "Todavia no se"],
+    },
+    cities: {
+      prompt: "¿Quieres una ruta clasica o prefieres descubrir ciudades menos obvias?",
+      replies: ["Clasica primera vez", "Comida local", "Naturaleza", "Moderna", "Sorprendeme"],
+    },
+  },
+  payment_help: {
+    support: {
+      prompt: "¿Que parte de pagos te preocupa mas?",
+      replies: ["Configurar Alipay", "WeChat Pay", "Tarjeta internacional", "Efectivo y plan B"],
+    },
+  },
+  transport_help: {
+    cities: {
+      prompt: "¿Entre que ciudades necesitas comparar transporte?",
+      replies: ["Beijing -> Xi'an", "Xi'an -> Shanghai", "Shanghai -> Hangzhou", "No lo se todavia"],
+    },
+  },
+  tickets_help: {
+    support: {
+      prompt: "¿Que tipo de reserva te preocupa?",
+      replies: ["Ciudad Prohibida", "Guerreros de Terracota", "Gran Muralla", "No se que reservar"],
+    },
+  },
+  prep_help: {
+    support: {
+      prompt: "¿Que preparacion quieres revisar primero?",
+      replies: ["Entrada/visado", "Pagos", "Internet y apps", "Trenes", "Entradas"],
+    },
+  },
+};
 
 const destinations = [
   {
@@ -869,6 +943,7 @@ const photoUrls = {
 
 const state = {
   step: -1,
+  intentId: "",
   favorites: new Set(),
   selectedCities: [],
   difyConversationId: "",
@@ -2238,11 +2313,18 @@ function renderDifyItinerary(answer) {
 
 function currentQuestion() {
   if (state.step < 0) return null;
-  return questions.filter((question) => !question.hidden)[state.step];
+  return visibleQuestions()[state.step];
 }
 
 function visibleQuestions() {
-  return questions.filter((question) => !question.hidden);
+  const flow = questionFlows[state.intentId] || questionFlows.route_planning;
+  return flow
+    .map((key) => {
+      const question = baseQuestions.find((item) => item.key === key);
+      const override = questionOverrides[state.intentId]?.[key];
+      return question ? { ...question, ...override } : null;
+    })
+    .filter(Boolean);
 }
 
 function advancePastAnswered() {
@@ -2279,7 +2361,7 @@ function renderQuickReplies() {
 
 function renderPreferences() {
   preferenceList.innerHTML = "";
-  questions.forEach((question) => {
+  baseQuestions.forEach((question) => {
     const row = document.createElement("div");
     const term = document.createElement("dt");
     const definition = document.createElement("dd");
@@ -3069,8 +3151,7 @@ function renderMap() {
 
 function askNextQuestion() {
   if (state.step < 0) {
-    addMessage("agent", "Hola, soy viajaachina. Puedo ayudarte a planificar la ruta, elegir ciudades, preparar pagos/transporte/entradas o resolver una duda concreta.");
-    addMessage("agent", "Elige por donde quieres empezar. Yo conectare las demas partes automaticamente cuando haga falta.");
+    addMessage("agent", "Hola, soy viajaachina. Elige una categoria o escribe tu pregunta completa; si no sabes adonde ir, primero te preguntare gustos y presupuesto.");
     renderQuickReplies();
     return;
   }
@@ -3078,9 +3159,9 @@ function askNextQuestion() {
   const question = currentQuestion();
   if (!question) {
     statusPill.textContent = "Listo";
-    addMessage("agent", "Perfecto. Ya tengo lo esencial. Puedo generar una guia completa con ruta, ciudades, pagos, transporte, entradas, frases utiles y checklist.");
     quickReplies.innerHTML = "";
     chatInput.placeholder = "Puedes pedir ajustes: mas comida, menos traslados, otro presupuesto...";
+    requestDifyFollowup(buildGuidedAgentPrompt());
     return;
   }
 
@@ -3095,8 +3176,17 @@ function detectIntent(text) {
   if (normalized.includes("no se") || normalized.includes("ciudad") || normalized.includes("adonde")) {
     return intentOptions.find((intent) => intent.id === "city_discovery");
   }
-  if (normalized.includes("pago") || normalized.includes("tren") || normalized.includes("metro") || normalized.includes("entrada") || normalized.includes("app")) {
-    return intentOptions.find((intent) => intent.id === "china_readiness");
+  if (normalized.includes("pago") || normalized.includes("alipay") || normalized.includes("wechat")) {
+    return intentOptions.find((intent) => intent.id === "payment_help");
+  }
+  if (normalized.includes("tren") || normalized.includes("metro") || normalized.includes("transporte") || normalized.includes("didi")) {
+    return intentOptions.find((intent) => intent.id === "transport_help");
+  }
+  if (normalized.includes("entrada") || normalized.includes("reserva") || normalized.includes("ticket")) {
+    return intentOptions.find((intent) => intent.id === "tickets_help");
+  }
+  if (normalized.includes("prepar") || normalized.includes("app") || normalized.includes("internet")) {
+    return intentOptions.find((intent) => intent.id === "prep_help");
   }
   if (normalized.includes("ruta") || normalized.includes("itinerario") || normalized.includes("plan")) {
     return intentOptions.find((intent) => intent.id === "route_planning");
@@ -3107,6 +3197,7 @@ function detectIntent(text) {
 function setIntent(text, options = {}) {
   const { silent = false } = options;
   const intent = detectIntent(text);
+  state.intentId = intent.id;
   state.answers.intent = intent.label;
   state.step = 0;
   renderPreferences();
@@ -3144,6 +3235,32 @@ function isCompleteAgentQuestion(text) {
     /(beijing|pekin|shanghai|xian|chengdu|guangzhou|shenzhen|hong kong)/.test(normalized),
   ].filter(Boolean).length;
   return text.length > 70 || signals >= 2;
+}
+
+function buildGuidedAgentPrompt() {
+  const intent = state.intentId || "route_planning";
+  const intentPrompts = {
+    route_planning: "Quiero planificar una ruta por China.",
+    city_discovery: "No se que ciudades visitar en China. Recomiendame ciudades segun mis preferencias.",
+    payment_help: "Necesito ayuda practica para pagar en China.",
+    transport_help: "Necesito ayuda practica con transporte en China.",
+    tickets_help: "Necesito ayuda con entradas y reservas de atracciones en China.",
+    prep_help: "Necesito preparar mi viaje a China antes de salir.",
+    general_question: "Tengo una pregunta general sobre viajar a China.",
+  };
+  return `
+${intentPrompts[intent] || intentPrompts.route_planning}
+
+Mis respuestas:
+- Duracion: ${state.answers.duration}
+- Viajeros: ${state.answers.travelers}
+- Presupuesto: ${state.answers.budget}
+- Intereses o prioridad: ${state.answers.interests}
+- Ciudades o estilo deseado: ${state.answers.cities}
+- Ayuda practica: ${state.answers.support}
+
+No me des una respuesta larga. Devuelve una recomendacion clara y el bloque <viajaachina_data> para que la web pueda mostrar tarjetas y guardar en Mi Viaje.
+  `.trim();
 }
 
 function handleAnswer(text, options = {}) {
@@ -3383,6 +3500,7 @@ Incluye: ruta por dias, por que elegir cada ciudad, transporte entre ciudades, e
 
 function resetFlow() {
   state.step = -1;
+  state.intentId = "";
   state.selectedCities = [];
   Object.keys(state.answers).forEach((key) => {
     state.answers[key] = "Pendiente";
