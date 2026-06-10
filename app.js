@@ -442,7 +442,7 @@ const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
 
-const CHINA_GEOJSON_URL = "https://geojson.cn/api/china/100000.json";
+const CHINA_GEOJSON_URL = "/api/china-map";
 const MAP_VIEWBOX = { width: 720, height: 470, padding: 28 };
 
 let chinaGeojson = null;
@@ -1157,8 +1157,19 @@ function updateGeojsonRoute(selected) {
 }
 
 async function initRealMap() {
-  if (!realMap || markerLayers.size) return;
-  renderLocalMap();
+  if (!realMap || chinaGeojson || geojsonLoading || markerLayers.size) return;
+
+  mapConfigState("Cargando mapa de China", "Cargando GeoJSON completo mediante el proxy de viajaachina.");
+
+  try {
+    const geojson = await loadChinaGeojson();
+    renderGeojsonMap(geojson);
+    renderMap();
+  } catch (error) {
+    geojsonLoading = null;
+    renderLocalMap();
+    renderMap();
+  }
 }
 
 function toggleFavorite(cityId) {
