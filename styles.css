@@ -1198,6 +1198,11 @@ button {
   background: #e7f4f1;
 }
 
+.account-actions button:disabled {
+  cursor: progress;
+  opacity: 0.62;
+}
+
 .full-width-action {
   width: 100%;
   justify-content: center;
@@ -2396,6 +2401,49 @@ button {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 13px;
+  color: var(--ink);
+  background: var(--white);
+  font: inherit;
+}
+
+.auth-form input:focus {
+  outline: 0;
+  border-color: var(--jade);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.auth-status {
+  min-height: 20px;
+  color: var(--cinnabar) !important;
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .modal-close {

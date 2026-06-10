@@ -231,10 +231,10 @@
         </section>
       </section>
 
-      <section class="account-section" aria-label="Cuenta demo y memoria personal">
+      <section class="account-section" aria-label="Cuenta y memoria personal">
         <div class="account-heading">
           <div class="section-heading">
-            <p>Cuenta demo</p>
+            <p>Cuenta gratis</p>
             <h2>Guarda favoritos, rutas y memoria personal</h2>
           </div>
           <span class="sync-pill" id="accountSyncStatus">Guardado local</span>
@@ -284,8 +284,10 @@
               <textarea id="profileMemory" rows="4"></textarea>
             </label>
             <div class="account-actions wide-field">
-              <button class="primary-button" type="submit">Guardar perfil demo</button>
+              <button class="primary-button" type="submit">Guardar perfil</button>
               <button class="secondary-button" id="applyProfileButton" type="button">Usar en este viaje</button>
+              <button class="secondary-button" id="accountAuthButton" type="button">Crear cuenta gratis</button>
+              <button class="secondary-button" id="signOutButton" type="button">Cerrar sesión</button>
             </div>
           </form>
 
@@ -386,9 +388,24 @@
         <p class="panel-kicker">Cuenta viajaachina</p>
         <h2 id="registerTitle">Guarda tus favoritos y memoria de viaje</h2>
         <p>
-          Próximamente podrás registrarte para conservar ciudades guardadas, preferencias,
-          historial de preguntas y memoria personal del agente entre sesiones.
+          Crea una cuenta gratis para conservar ciudades guardadas, preferencias,
+          rutas, checklist y memoria personal del agente entre sesiones.
         </p>
+        <form class="auth-form" id="authForm">
+          <label>
+            Email
+            <input id="authEmail" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Contraseña
+            <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required />
+          </label>
+          <div class="auth-actions">
+            <button class="primary-button" id="authSignupButton" type="submit">Crear cuenta gratis</button>
+            <button class="secondary-button" id="authSigninButton" type="button">Iniciar sesión</button>
+          </div>
+          <p class="auth-status" id="authStatus"></p>
+        </form>
         <div class="register-benefits">
           <span>Favoritos sincronizados</span>
           <span>Preferencias persistentes</span>

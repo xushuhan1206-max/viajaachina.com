@@ -417,6 +417,7 @@ const transportRoutes = {
 
 const ACCOUNT_STORAGE_KEY = "viajaachina-demo-account";
 const PREP_STORAGE_KEY = "viajaachina-prep-state";
+const AUTH_STORAGE_KEY = "viajaachina-auth-session";
 
 const prepScenarios = [
   { id: "first_time", label: "Es mi primera vez", modules: ["visa", "payments", "apps", "transport", "risks"] },
@@ -1253,6 +1254,7 @@ const state = {
     answers: {},
   },
   account: { ...defaultAccount },
+  session: null,
   answers: {
     intent: "Pendiente",
     duration: "Pendiente",
@@ -1291,6 +1293,8 @@ const profileBudget = document.querySelector("#profileBudget");
 const profileInterests = document.querySelector("#profileInterests");
 const profileMemory = document.querySelector("#profileMemory");
 const applyProfileButton = document.querySelector("#applyProfileButton");
+const accountAuthButton = document.querySelector("#accountAuthButton");
+const signOutButton = document.querySelector("#signOutButton");
 const savedCities = document.querySelector("#savedCities");
 const savedRoutes = document.querySelector("#savedRoutes");
 const agentMemorySummary = document.querySelector("#agentMemorySummary");
@@ -1304,6 +1308,11 @@ const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
+const authForm = document.querySelector("#authForm");
+const authEmail = document.querySelector("#authEmail");
+const authPassword = document.querySelector("#authPassword");
+const authSigninButton = document.querySelector("#authSigninButton");
+const authStatus = document.querySelector("#authStatus");
 const cityDrawer = document.querySelector("#cityDrawer");
 const cityDrawerContent = document.querySelector("#cityDrawerContent");
 const closeCityDrawer = document.querySelector("#closeCityDrawer");
@@ -1331,6 +1340,7 @@ let leafletMap = null;
 let leafletGeoLayer = null;
 let leafletRouteLines = [];
 let activeTripHubTab = "summary";
+let accountCloudSaveTimer = null;
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -1342,6 +1352,8 @@ function loadAccount() {
     state.account.favoritePlaces = state.account.favoritePlaces || [];
     state.account.savedPrepTasks = state.account.savedPrepTasks || [];
     state.account.aiMemories = state.account.aiMemories || [];
+    state.session = JSON.parse(window.localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+    if (state.session?.user?.email) state.account.email = state.session.user.email;
     state.difyConversationId = window.localStorage.getItem("viajaachina:dify_conversation_id") || "";
   } catch (error) {
     state.account = { ...defaultAccount };
@@ -1361,6 +1373,7 @@ function persistAccount(status = "Guardado local") {
   try {
     window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(state.account));
     if (accountSyncStatus) accountSyncStatus.textContent = status;
+    scheduleAccountCloudSave();
   } catch (error) {
     if (accountSyncStatus) accountSyncStatus.textContent = "No guardado";
   }
@@ -1759,9 +1772,9 @@ function renderPrepCenter() {
 
 function showRegisterPrompt(reason) {
   const messages = {
-    favorite: "Registrate para conservar tus ciudades favoritas y retomarlas desde cualquier dispositivo.",
-    chat: "Crea una cuenta para que el agente recuerde tus preferencias y preguntas importantes.",
-    top: "Pronto podras guardar favoritos, memoria personal y guias generadas en tu cuenta.",
+    favorite: "Crea una cuenta gratis para conservar tus ciudades favoritas y retomarlas desde cualquier dispositivo.",
+    chat: "Crea una cuenta gratis para que el agente recuerde tus preferencias y preguntas importantes.",
+    top: "Crea una cuenta gratis para guardar favoritos, memoria personal y guias generadas.",
   };
   if (registerToast) {
     registerToast.textContent = messages[reason] || messages.top;
@@ -1776,6 +1789,7 @@ function showRegisterPrompt(reason) {
 function openRegisterInfo(reason = "top") {
   showRegisterPrompt(reason);
   if (!registerModal) return;
+  if (authEmail && state.account.email !== defaultAccount.email) authEmail.value = state.account.email;
   registerModal.classList.add("is-open");
   registerModal.setAttribute("aria-hidden", "false");
 }
@@ -1946,7 +1960,15 @@ function renderAccount(syncForm = true) {
   }
 
   accountDisplayName.textContent = state.account.name || defaultAccount.name;
-  accountDisplayEmail.textContent = state.account.email || defaultAccount.email;
+  accountDisplayEmail.textContent = isSignedIn()
+    ? `${state.account.email || defaultAccount.email} · Cuenta conectada`
+    : state.account.email || defaultAccount.email;
+  if (accountAuthButton) accountAuthButton.textContent = isSignedIn() ? "Cuenta conectada" : "Crear cuenta gratis";
+  if (accountAuthButton) accountAuthButton.disabled = isSignedIn();
+  if (signOutButton) signOutButton.style.display = isSignedIn() ? "inline-flex" : "none";
+  if (accountSyncStatus && isSignedIn() && accountSyncStatus.textContent === "Guardado local") {
+    accountSyncStatus.textContent = "Guardado en este dispositivo";
+  }
   const memoryCount = state.account.memory.trim() ? 1 : 0;
   accountStats.innerHTML = `
     <span>Favoritos: ${state.favorites.size}</span>
@@ -2228,6 +2250,159 @@ function saveAccountFromForm(status = "Perfil guardado") {
   collectAccountForm();
   persistAccount(status);
   renderAccount();
+}
+
+function cityNameMap() {
+  return Object.fromEntries(destinations.map((city) => [city.id, city.name]));
+}
+
+function isSignedIn() {
+  return Boolean(state.session?.accessToken);
+}
+
+function authHeaders() {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${state.session.accessToken}`,
+  };
+}
+
+function scheduleAccountCloudSave() {
+  if (!isSignedIn()) return;
+  window.clearTimeout(accountCloudSaveTimer);
+  accountCloudSaveTimer = window.setTimeout(saveAccountToCloud, 900);
+}
+
+async function saveAccountToCloud() {
+  if (!isSignedIn()) return;
+  try {
+    const response = await fetch("/api/account", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        account: state.account,
+        cityNames: cityNameMap(),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "No se pudo sincronizar");
+    }
+    if (accountSyncStatus) accountSyncStatus.textContent = "Guardado en tu cuenta";
+    renderAccount();
+  } catch (error) {
+    if (accountSyncStatus) {
+      accountSyncStatus.textContent = `Cuenta pendiente: ${error.message}`;
+    }
+  }
+}
+
+function applyCloudAccount(accountPayload) {
+  if (!accountPayload?.profile) return false;
+  const profile = accountPayload.profile;
+  state.account = {
+    ...state.account,
+    name: profile.display_name || state.account.name,
+    email: profile.email || state.account.email,
+    travelStyle: profile.travel_style || state.account.travelStyle,
+    budget: profile.budget_level || state.account.budget,
+    interests: profile.interests || state.account.interests,
+    memory: profile.memory_text || state.account.memory,
+    favoriteCityIds: (accountPayload.saved_cities || []).map((city) => city.city_id),
+    favoritePlaces: (accountPayload.saved_places || []).map((place) => ({
+      id: place.place_id,
+      name: place.place_name,
+      cityId: place.city_id,
+      cityName: place.city_name,
+      source: place.source,
+      note: place.note,
+    })),
+    savedRoutes: (accountPayload.saved_routes || []).map((route) => ({
+      id: route.id,
+      name: route.title,
+      cityIds: route.city_ids || [],
+      segments: route.segments || [],
+      days: route.days,
+      budget: route.budget,
+      interests: route.interests,
+      source: route.source,
+      createdAt: route.created_at,
+    })),
+    savedPrepTasks: (accountPayload.prep_progress || []).map((task) => ({
+      id: task.task_id,
+      category: task.category,
+      task: task.task,
+      priority: task.priority,
+      status: task.status,
+      note: task.note,
+      createdAt: task.created_at,
+    })),
+    aiMemories: (accountPayload.chat_memories || [])
+      .filter((memory) => memory.memory_type !== "profile")
+      .map((memory) => ({
+        type: memory.memory_type,
+        content: memory.content,
+        source: memory.source,
+      })),
+  };
+  state.favorites = new Set(state.account.favoriteCityIds || []);
+  window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(state.account));
+  return true;
+}
+
+async function loadAccountFromCloud() {
+  if (!isSignedIn()) return false;
+  const response = await fetch("/api/account", { headers: authHeaders() });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.ok) throw new Error(data.error || "No se pudo cargar la cuenta");
+  return applyCloudAccount(data.account);
+}
+
+async function submitAuth(action) {
+  if (!authEmail || !authPassword) return;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (!email || password.length < 6) {
+    if (authStatus) authStatus.textContent = "Usa un email valido y una contraseña de al menos 6 caracteres.";
+    return;
+  }
+
+  if (authStatus) authStatus.textContent = action === "signup" ? "Creando cuenta..." : "Iniciando sesión...";
+
+  try {
+    const response = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, email, password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || "No se pudo conectar la cuenta");
+
+    state.session = data.session;
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state.session));
+    state.account.email = data.session.user.email;
+    if (profileEmail) profileEmail.value = state.account.email;
+    if (action === "signin") {
+      const loaded = await loadAccountFromCloud();
+      if (!loaded) await saveAccountToCloud();
+    } else {
+      persistAccount("Cuenta conectada");
+      await saveAccountToCloud();
+    }
+    renderAccount();
+    closeRegisterInfo();
+    addMessage("agent", "Tu cuenta esta conectada. A partir de ahora guardare automaticamente favoritos, lugares, rutas, checklist y memoria personal.");
+  } catch (error) {
+    if (authStatus) authStatus.textContent = error.message;
+  }
+}
+
+function signOut() {
+  state.session = null;
+  window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  if (accountSyncStatus) accountSyncStatus.textContent = "Guardado local";
+  renderAccount();
+  addMessage("agent", "Sesion cerrada. Tus datos siguen guardados en este navegador.");
 }
 
 function applyAccountToTrip() {
@@ -4373,6 +4548,15 @@ if (accountForm) {
   });
 }
 if (applyProfileButton) applyProfileButton.addEventListener("click", applyAccountToTrip);
+if (accountAuthButton) accountAuthButton.addEventListener("click", () => openRegisterInfo("top"));
+if (signOutButton) signOutButton.addEventListener("click", signOut);
+if (authForm) {
+  authForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitAuth("signup");
+  });
+}
+if (authSigninButton) authSigninButton.addEventListener("click", () => submitAuth("signin"));
 if (saveRouteButton) saveRouteButton.addEventListener("click", saveCurrentRoute);
 if (exportGuideButton) exportGuideButton.addEventListener("click", exportGuide);
 if (openTripHubTop) openTripHubTop.addEventListener("click", () => openTripHub("summary"));
