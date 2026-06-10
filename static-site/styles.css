@@ -111,6 +111,19 @@ button {
   gap: 10px;
 }
 
+.free-nav-badge {
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 999px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  background: #fff3cf;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
 .icon-button,
 .ghost-button,
 .primary-button,
@@ -215,6 +228,23 @@ button {
   color: rgba(255, 255, 255, 0.9);
   font-size: clamp(0.98rem, 1.45vw, 1.14rem);
   line-height: 1.6;
+}
+
+.hero-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.hero-trust-row span {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: #fff8e7;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.84rem;
+  font-weight: 850;
 }
 
 .chat-panel,
@@ -420,12 +450,81 @@ button {
   align-items: start;
 }
 
+.seo-intro,
+.seo-faq,
 .destinations,
 .route-planner,
 .prep-center,
 .account-section {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
+}
+
+.seo-intro {
+  padding: 34px 0 18px;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.28fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.seo-intro-copy {
+  position: sticky;
+  top: 18px;
+}
+
+.section-kicker {
+  margin: 0 0 8px;
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seo-intro h2,
+.seo-faq h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 2.8vw, 2.35rem);
+  line-height: 1.08;
+}
+
+.seo-intro-copy p:last-child {
+  margin: 14px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.seo-keyword-grid,
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.seo-keyword-grid article,
+.faq-grid article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--white);
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.06);
+}
+
+.seo-keyword-grid h3,
+.faq-grid h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.seo-keyword-grid p,
+.faq-grid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.seo-faq {
+  padding: 24px 0 56px;
 }
 
 .prep-center {
@@ -1974,10 +2073,15 @@ button {
 
   .hero-content,
   .workspace,
+  .seo-intro,
   .prep-layout,
   .map-layout,
   .account-layout {
     grid-template-columns: 1fr;
+  }
+
+  .seo-intro-copy {
+    position: static;
   }
 
   .destination-grid {
@@ -1998,6 +2102,8 @@ button {
   .topbar,
   .hero-content,
   .workspace,
+  .seo-intro,
+  .seo-faq,
   .destinations,
   .route-planner,
   .prep-center,
@@ -2039,6 +2145,8 @@ button {
   }
 
   .guide-grid,
+  .seo-keyword-grid,
+  .faq-grid,
   .prep-guide-grid,
   .preference-list div,
   .prep-module-head,

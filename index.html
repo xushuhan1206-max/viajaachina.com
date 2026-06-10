@@ -3,8 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>viajaachina - Asistente de viaje AI</title>
+    <title>Viajar a China gratis | Planificador AI en español - viajaachina</title>
+    <meta
+      name="description"
+      content="Planificador gratis para viajar a China en español. Crea itinerarios, compara ciudades, trenes, Alipay, WeChat Pay, visado, entradas y preparación antes del viaje."
+    />
+    <meta
+      name="keywords"
+      content="viajar a China, viaje a China, itinerario China, China en 10 dias, planificador China gratis, Alipay China, WeChat Pay China, tren bala China, visa China, turismo China en español"
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://viajaachina.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="viajaachina - Planificador gratis para viajar a China" />
+    <meta
+      property="og:description"
+      content="Organiza gratis tu viaje a China en español: ruta, ciudades, transporte, pagos, entradas, apps y preparación."
+    />
+    <meta property="og:url" content="https://viajaachina.com/" />
+    <meta property="og:site_name" content="viajaachina" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Viajar a China gratis con IA - viajaachina" />
+    <meta
+      name="twitter:description"
+      content="Planificador AI gratuito en español para rutas por China, tren bala, Alipay, visado y preparación."
+    />
     <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "viajaachina",
+        "url": "https://viajaachina.com/",
+        "applicationCategory": "TravelApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "es",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Planificador gratis de viajes a China en español con rutas, ciudades, transporte, pagos, entradas y preparación."
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
@@ -19,6 +60,7 @@
             viajaachina
           </a>
           <div class="nav-actions">
+            <span class="free-nav-badge">Gratis</span>
             <button class="icon-button" type="button" title="Idioma">ES</button>
             <button class="trip-hub-button" type="button" id="openTripHubTop">
               Mi Viaje
@@ -31,12 +73,17 @@
 
         <div class="hero-content">
           <div class="hero-copy">
-            <p class="eyebrow">AI travel planner para hispanohablantes</p>
+            <p class="eyebrow">Planificador gratis para hispanohablantes</p>
             <h1>viajaachina</h1>
             <p>
-              Convierte una conversacion corta en una ruta clara para viajar por China:
-              ciudades, entradas, transporte, pagos y consejos practicos.
+              Crea gratis tu itinerario para viajar a China en español:
+              ciudades, tren bala, Alipay, WeChat Pay, entradas, visado y consejos practicos.
             </p>
+            <div class="hero-trust-row">
+              <span>Gratis</span>
+              <span>Sin registro obligatorio</span>
+              <span>En español</span>
+            </div>
           </div>
 
           <section class="chat-panel" aria-label="Chatflow de planificacion">
@@ -67,6 +114,35 @@
 
             <div class="quick-replies" id="quickReplies" aria-label="Respuestas rapidas"></div>
           </section>
+        </div>
+      </section>
+
+      <section class="seo-intro" aria-label="Guia gratis para viajar a China">
+        <div class="seo-intro-copy">
+          <p class="section-kicker">Viajar a China en español</p>
+          <h2>Planifica gratis tu viaje a China con rutas, pagos y transporte claros</h2>
+          <p>
+            viajaachina ayuda a turistas hispanohablantes a preparar un viaje a China sin perderse entre
+            visado, Alipay, WeChat Pay, trenes de alta velocidad, reservas de entradas y ciudades recomendadas.
+          </p>
+        </div>
+        <div class="seo-keyword-grid">
+          <article>
+            <h3>Itinerario China</h3>
+            <p>Organiza rutas de 5, 8, 10 o 12 dias por Pekin, Xi'an, Shanghai, Chengdu, Hangzhou y mas ciudades.</p>
+          </article>
+          <article>
+            <h3>Alipay y WeChat Pay</h3>
+            <p>Prepara pagos moviles, tarjetas internacionales, efectivo de respaldo y apps utiles antes de aterrizar.</p>
+          </article>
+          <article>
+            <h3>Tren bala China</h3>
+            <p>Compara tiempos y precios aproximados entre ciudades para decidir si conviene tren, avion o traslado.</p>
+          </article>
+          <article>
+            <h3>Visa China y entrada</h3>
+            <p>Revisa que necesitas confirmar antes de comprar vuelos: pasaporte, estancia, entradas y fronteras.</p>
+          </article>
         </div>
       </section>
 
@@ -129,7 +205,7 @@
             <h2>Preferencias detectadas</h2>
           </div>
           <dl class="preference-list" id="preferenceList"></dl>
-          <button class="primary-button" id="generateButton" type="button">Generar itinerario</button>
+          <button class="primary-button" id="generateButton" type="button">Generar itinerario gratis</button>
           <button class="secondary-button full-width-action" id="exportGuideButton" type="button">Exportar guia</button>
         </aside>
 
@@ -215,7 +291,81 @@
           </aside>
         </div>
       </section>
+
+      <section class="seo-faq" aria-label="Preguntas frecuentes para viajar a China">
+        <div class="section-heading">
+          <p>Preguntas frecuentes</p>
+          <h2>Guia rapida para viajar a China por primera vez</h2>
+        </div>
+        <div class="faq-grid">
+          <article>
+            <h3>¿Es gratis usar viajaachina?</h3>
+            <p>Sí. Puedes explorar ciudades, guardar favoritos, comparar rutas y generar una guia inicial gratis.</p>
+          </article>
+          <article>
+            <h3>¿Cuantos dias necesito para un primer viaje a China?</h3>
+            <p>Para una primera vez, 8 a 12 dias permiten combinar Pekin, Xi'an y Shanghai sin correr demasiado.</p>
+          </article>
+          <article>
+            <h3>¿Necesito Alipay o WeChat Pay para viajar a China?</h3>
+            <p>Es muy recomendable preparar pagos moviles antes del viaje y llevar efectivo como respaldo.</p>
+          </article>
+          <article>
+            <h3>¿Conviene viajar en tren bala por China?</h3>
+            <p>Entre muchas ciudades, el tren de alta velocidad es comodo y rapido. El mapa compara tiempos y precios por tramo.</p>
+          </article>
+          <article>
+            <h3>¿Que ciudades visitar en China?</h3>
+            <p>Pekin, Xi'an, Shanghai, Chengdu, Hangzhou, Suzhou, Guilin y Hong Kong son opciones frecuentes segun estilo de viaje.</p>
+          </article>
+          <article>
+            <h3>¿viajaachina reemplaza fuentes oficiales?</h3>
+            <p>No. La herramienta ayuda a organizar el viaje, pero visados, entradas y normas deben confirmarse en fuentes oficiales.</p>
+          </article>
+        </div>
+      </section>
     </main>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Es gratis usar viajaachina?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. Puedes explorar ciudades, guardar favoritos, comparar rutas y generar una guia inicial gratis."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Cuantos dias necesito para un primer viaje a China?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Para una primera vez, 8 a 12 dias permiten combinar Pekin, Xi'an y Shanghai sin correr demasiado."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Necesito Alipay o WeChat Pay para viajar a China?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Es muy recomendable preparar pagos moviles antes del viaje y llevar efectivo como respaldo."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Conviene viajar en tren bala por China?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Entre muchas ciudades, el tren de alta velocidad es comodo y rapido. El mapa compara tiempos y precios por tramo."
+            }
+          }
+        ]
+      }
+    </script>
 
     <div class="register-toast" id="registerToast" role="status" aria-live="polite"></div>
     <button class="trip-hub-fab" id="openTripHubFab" type="button">
