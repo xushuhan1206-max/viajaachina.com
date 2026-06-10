@@ -126,6 +126,7 @@
           </div>
           <dl class="preference-list" id="preferenceList"></dl>
           <button class="primary-button" id="generateButton" type="button">Generar itinerario</button>
+          <button class="secondary-button full-width-action" id="exportGuideButton" type="button">Exportar guia</button>
         </aside>
 
         <section class="itinerary" aria-label="Itinerario generado">
@@ -140,6 +141,75 @@
             </div>
           </div>
         </section>
+      </section>
+
+      <section class="account-section" aria-label="Cuenta demo y memoria personal">
+        <div class="account-heading">
+          <div class="section-heading">
+            <p>Cuenta demo</p>
+            <h2>Guarda favoritos, rutas y memoria personal</h2>
+          </div>
+          <span class="sync-pill" id="accountSyncStatus">Guardado local</span>
+        </div>
+        <div class="account-layout">
+          <aside class="account-overview">
+            <div class="avatar-mark">中</div>
+            <h3 id="accountDisplayName">Viajero invitado</h3>
+            <p id="accountDisplayEmail">demo@viajaachina.com</p>
+            <div class="account-stats" id="accountStats"></div>
+            <button class="secondary-button" id="saveRouteButton" type="button">Guardar ruta actual</button>
+          </aside>
+
+          <form class="account-form" id="accountForm">
+            <label>
+              Nombre
+              <input id="profileName" type="text" autocomplete="name" />
+            </label>
+            <label>
+              Email
+              <input id="profileEmail" type="email" autocomplete="email" />
+            </label>
+            <label>
+              Estilo de viaje
+              <select id="profileStyle">
+                <option>Primer viaje practico</option>
+                <option>Historia y cultura</option>
+                <option>Comida local</option>
+                <option>Familia y comodidad</option>
+                <option>Naturaleza y fotografia</option>
+              </select>
+            </label>
+            <label>
+              Presupuesto
+              <select id="profileBudget">
+                <option>Economico</option>
+                <option>Equilibrado</option>
+                <option>Comodo</option>
+              </select>
+            </label>
+            <label class="wide-field">
+              Intereses
+              <input id="profileInterests" type="text" />
+            </label>
+            <label class="wide-field">
+              Memoria personal del agente
+              <textarea id="profileMemory" rows="4"></textarea>
+            </label>
+            <div class="account-actions wide-field">
+              <button class="primary-button" type="submit">Guardar perfil demo</button>
+              <button class="secondary-button" id="applyProfileButton" type="button">Usar en este viaje</button>
+            </div>
+          </form>
+
+          <aside class="memory-panel">
+            <h3>Ciudades guardadas</h3>
+            <div class="saved-cities" id="savedCities"></div>
+            <h3>Rutas guardadas</h3>
+            <div class="saved-routes" id="savedRoutes"></div>
+            <h3>Memoria activa</h3>
+            <p id="agentMemorySummary"></p>
+          </aside>
+        </div>
       </section>
     </main>
 
@@ -159,6 +229,13 @@
           <span>Guías más personalizadas</span>
         </div>
       </div>
+    </div>
+    <div class="city-drawer" id="cityDrawer" aria-hidden="true">
+      <div class="city-drawer-backdrop" id="cityDrawerBackdrop"></div>
+      <aside class="city-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cityDrawerTitle">
+        <button class="modal-close" id="closeCityDrawer" type="button" aria-label="Cerrar">×</button>
+        <div id="cityDrawerContent"></div>
+      </aside>
     </div>
     <script src="app.js"></script>
   </body>

@@ -639,7 +639,56 @@ const defaultAccount = {
   memory:
     "Prefiere una ruta clara, pocos cambios de hotel y explicaciones practicas sobre pagos, transporte y entradas.",
   favoriteCityIds: [],
+  savedRoutes: [],
   updatedAt: "",
+};
+
+const cityDecisionDetails = {
+  beijing: {
+    stay: "3-4 dias",
+    budget: "Medio",
+    mobility: "Alta, metro amplio pero distancias largas",
+    bestFor: ["Primer viaje", "Historia imperial", "Gran Muralla", "Museos"],
+    mustDo: ["Ciudad Prohibida", "Templo del Cielo", "Gran Muralla Mutianyu", "Hutongs", "Pato laqueado"],
+    pairs: ["Xi'an", "Shanghai", "Chengdu"],
+    risks: ["Ciudad Prohibida requiere reserva", "Gran Muralla toma medio dia o mas", "Evitar festivos nacionales"],
+  },
+  shanghai: {
+    stay: "2-3 dias",
+    budget: "Medio-alto",
+    mobility: "Muy alta, metro y conexiones comodas",
+    bestFor: ["Primer contacto suave", "Ciudad moderna", "Compras", "Museos"],
+    mustDo: ["Bund", "Pudong", "Museo de Shanghai", "Concesion Francesa", "Excursion a Suzhou o Hangzhou"],
+    pairs: ["Hangzhou", "Suzhou", "Beijing"],
+    risks: ["Hoteles caros en zonas centrales", "Miradores dependen del clima", "Muchos aeropuertos/estaciones: revisar bien"],
+  },
+  xian: {
+    stay: "2 dias",
+    budget: "Medio",
+    mobility: "Media-alta, traslados puntuales largos",
+    bestFor: ["Historia antigua", "Comida local", "Primera vez", "Fotografia"],
+    mustDo: ["Guerreros de Terracota", "Muralla antigua", "Barrio musulman", "Gran Pagoda del Ganso Salvaje"],
+    pairs: ["Beijing", "Chengdu", "Shanghai"],
+    risks: ["Terracota queda fuera del centro", "Comida puede ser intensa para estomagos sensibles", "Reservar trenes con pasaporte"],
+  },
+  chengdu: {
+    stay: "2-3 dias",
+    budget: "Medio",
+    mobility: "Media, ritmo relajado",
+    bestFor: ["Pandas", "Comida picante", "Viaje relajado", "Sichuan"],
+    mustDo: ["Base de pandas", "Casa de te", "Hotpot", "Calle Jinli", "Excursion a Leshan"],
+    pairs: ["Xi'an", "Chongqing", "Zhangjiajie"],
+    risks: ["Pandas se ven mejor temprano", "Picante alto", "Atracciones naturales requieren traslados"],
+  },
+  shenzhen: {
+    stay: "1-2 dias",
+    budget: "Medio-alto",
+    mobility: "Alta, ciudad moderna",
+    bestFor: ["Tecnologia", "Compras", "Diseno urbano", "Ruta con Hong Kong"],
+    mustDo: ["Nanshan", "OCT Loft", "Bahia de Shenzhen", "Mercados tech", "Museos de diseno"],
+    pairs: ["Hong Kong", "Guangzhou", "Guilin"],
+    risks: ["Menos historia clasica", "Cruces con Hong Kong requieren revisar reglas", "Tramos urbanos largos"],
+  },
 };
 
 const photoUrls = {
@@ -728,11 +777,18 @@ const profileInterests = document.querySelector("#profileInterests");
 const profileMemory = document.querySelector("#profileMemory");
 const applyProfileButton = document.querySelector("#applyProfileButton");
 const savedCities = document.querySelector("#savedCities");
+const savedRoutes = document.querySelector("#savedRoutes");
 const agentMemorySummary = document.querySelector("#agentMemorySummary");
+const saveRouteButton = document.querySelector("#saveRouteButton");
+const exportGuideButton = document.querySelector("#exportGuideButton");
 const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
+const cityDrawer = document.querySelector("#cityDrawer");
+const cityDrawerContent = document.querySelector("#cityDrawerContent");
+const closeCityDrawer = document.querySelector("#closeCityDrawer");
+const cityDrawerBackdrop = document.querySelector("#cityDrawerBackdrop");
 const prepScenariosContainer = document.querySelector("#prepScenarios");
 const prepTabs = document.querySelector("#prepTabs");
 const prepModule = document.querySelector("#prepModule");
@@ -756,6 +812,7 @@ function loadAccount() {
     const stored = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
     const parsed = stored ? JSON.parse(stored) : {};
     state.account = { ...defaultAccount, ...parsed };
+    state.account.savedRoutes = state.account.savedRoutes || [];
     state.difyConversationId = window.localStorage.getItem("viajaachina:dify_conversation_id") || "";
   } catch (error) {
     state.account = { ...defaultAccount };
@@ -1048,6 +1105,65 @@ function favoriteCityNames() {
     .map((city) => city.name);
 }
 
+function fallbackCityDetail(city) {
+  return {
+    stay: "1-2 dias",
+    budget: "Medio",
+    mobility: "Media, revisar estacion o aeropuerto correcto",
+    bestFor: [city.region, "Ruta personalizada", "Explorar fuera del circuito basico"],
+    mustDo: [city.feature, "Comida local", "Barrio central", "Punto panoramico"],
+    pairs: destinations
+      .filter((item) => item.id !== city.id)
+      .slice(0, 3)
+      .map((item) => item.name),
+    risks: ["Confirmar transporte real antes de cerrar ruta", "Guardar direcciones en chino", "Revisar disponibilidad en festivos"],
+  };
+}
+
+function cityDetail(city) {
+  return cityDecisionDetails[city.id] || fallbackCityDetail(city);
+}
+
+function routeSnapshot() {
+  const cities = selectedCityNames();
+  return {
+    id: `route-${Date.now()}`,
+    name: cities.length ? cities.join(" -> ") : "Ruta sin ciudades",
+    cityIds: [...state.selectedCities],
+    createdAt: new Date().toISOString(),
+    budget: state.answers.budget,
+    interests: state.answers.interests,
+  };
+}
+
+function saveCurrentRoute() {
+  if (!state.selectedCities.length) {
+    showRegisterPrompt("top");
+    addMessage("agent", "Selecciona al menos una ciudad en el mapa o en las tarjetas antes de guardar una ruta.");
+    return;
+  }
+  const snapshot = routeSnapshot();
+  state.account.savedRoutes = [snapshot, ...(state.account.savedRoutes || [])].slice(0, 6);
+  persistAccount("Ruta guardada localmente");
+  renderAccount(false);
+  showRegisterPrompt("top");
+}
+
+function loadSavedRoute(routeId) {
+  const route = (state.account.savedRoutes || []).find((item) => item.id === routeId);
+  if (!route) return;
+  state.selectedCities = [...route.cityIds];
+  renderDestinations();
+  renderMap();
+  document.querySelector(".route-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function deleteSavedRoute(routeId) {
+  state.account.savedRoutes = (state.account.savedRoutes || []).filter((item) => item.id !== routeId);
+  persistAccount("Ruta eliminada");
+  renderAccount(false);
+}
+
 function renderAccount(syncForm = true) {
   if (!accountForm) return;
 
@@ -1065,6 +1181,7 @@ function renderAccount(syncForm = true) {
   const memoryCount = state.account.memory.trim() ? 1 : 0;
   accountStats.innerHTML = `
     <span>Favoritos: ${state.favorites.size}</span>
+    <span>Rutas: ${(state.account.savedRoutes || []).length}</span>
     <span>Memorias: ${memoryCount}</span>
   `;
 
@@ -1075,6 +1192,25 @@ function renderAccount(syncForm = true) {
 
   agentMemorySummary.textContent =
     `Estilo: ${state.account.travelStyle}. Presupuesto: ${state.account.budget}. Intereses: ${state.account.interests}. Memoria: ${state.account.memory}`;
+
+  if (savedRoutes) {
+    savedRoutes.innerHTML = (state.account.savedRoutes || []).length
+      ? state.account.savedRoutes
+          .map(
+            (route) => `
+              <article class="saved-route-card">
+                <strong>${route.name}</strong>
+                <span>${route.budget || "Presupuesto pendiente"} · ${route.interests || "Intereses pendientes"}</span>
+                <div>
+                  <button type="button" data-load-route="${route.id}">Cargar</button>
+                  <button type="button" data-delete-route="${route.id}">Eliminar</button>
+                </div>
+              </article>
+            `,
+          )
+          .join("")
+      : '<span class="muted-note">Selecciona ciudades y guarda una ruta para verla aqui.</span>';
+  }
 }
 
 function collectAccountForm() {
@@ -1209,6 +1345,82 @@ function askAiWithContext(kind) {
   showRegisterPrompt("chat");
   focusChat();
   requestDifyFollowup(prompt);
+}
+
+function openCityDrawer(cityId) {
+  const city = destinations.find((item) => item.id === cityId);
+  if (!city || !cityDrawer || !cityDrawerContent) return;
+  const detail = cityDetail(city);
+  cityDrawerContent.innerHTML = `
+    <img class="city-drawer-image" src="${destinationPhoto(city)}" alt="${city.name}" />
+    <p class="panel-kicker">${city.region}</p>
+    <h2 id="cityDrawerTitle">${city.name}</h2>
+    <p class="city-drawer-intro">${city.intro}</p>
+    <div class="city-score-grid">
+      <span><strong>${detail.stay}</strong> Estancia</span>
+      <span><strong>${detail.budget}</strong> Gasto</span>
+      <span><strong>${detail.mobility}</strong> Movilidad</span>
+    </div>
+    <div class="city-detail-block">
+      <h3>Ideal para</h3>
+      <div class="pill-row">${detail.bestFor.map((item) => `<span>${item}</span>`).join("")}</div>
+    </div>
+    <div class="city-detail-block">
+      <h3>Experiencias clave</h3>
+      <ul>${detail.mustDo.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </div>
+    <div class="city-detail-block">
+      <h3>Combina bien con</h3>
+      <div class="pill-row">${detail.pairs.map((item) => `<span>${item}</span>`).join("")}</div>
+    </div>
+    <div class="city-detail-block">
+      <h3>Riesgos a revisar</h3>
+      <ul>${detail.risks.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </div>
+    <div class="drawer-actions">
+      <button class="primary-button" type="button" data-add-city-route="${city.id}">Añadir a ruta</button>
+      <button class="secondary-button" type="button" data-favorite-city="${city.id}">
+        ${state.favorites.has(city.id) ? "Quitar favorito" : "Guardar favorito"}
+      </button>
+      <button class="ai-context-button is-wide" type="button" data-city-ai="${city.id}">Preguntar a IA</button>
+    </div>
+  `;
+  cityDrawer.classList.add("is-open");
+  cityDrawer.setAttribute("aria-hidden", "false");
+}
+
+function closeCityDetail() {
+  if (!cityDrawer) return;
+  cityDrawer.classList.remove("is-open");
+  cityDrawer.setAttribute("aria-hidden", "true");
+}
+
+function askAiAboutCity(cityId) {
+  const city = destinations.find((item) => item.id === cityId);
+  if (!city) return;
+  const detail = cityDetail(city);
+  const prompt = `Ayudame a decidir si ${city.name} encaja en mi viaje a China. Datos: ${city.intro}. Estancia recomendada: ${detail.stay}. Ideal para: ${detail.bestFor.join(", ")}. Experiencias: ${detail.mustDo.join(", ")}. Riesgos: ${detail.risks.join(", ")}. Mis intereses: ${state.answers.interests}. Presupuesto: ${state.answers.budget}.`;
+  closeCityDetail();
+  addMessage("user", prompt);
+  focusChat();
+  requestDifyFollowup(prompt);
+}
+
+function exportGuide() {
+  const guideText = itineraryContent?.innerText?.trim();
+  if (!guideText || guideText.includes("Tu guia aparecera aqui")) {
+    showRegisterPrompt("top");
+    addMessage("agent", "Genera una guia primero y despues podras exportarla como archivo Markdown.");
+    return;
+  }
+  const markdown = `# Guia viajaachina\n\n## Perfil\n- Duracion: ${state.answers.duration}\n- Presupuesto: ${state.answers.budget}\n- Intereses: ${state.answers.interests}\n- Ciudades seleccionadas: ${selectedCityNames().join(", ") || "ninguna"}\n- Favoritos: ${favoriteCityNames().join(", ") || "ninguno"}\n\n## Guia\n${guideText}\n`;
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "guia-viajaachina.md";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function escapeHtml(value) {
@@ -1956,6 +2168,15 @@ function toggleSelectedCity(cityId) {
   renderMap();
 }
 
+function addCityToRoute(cityId) {
+  if (!state.selectedCities.includes(cityId)) {
+    state.selectedCities.push(cityId);
+  }
+  renderDestinations();
+  renderMap();
+  closeCityDetail();
+}
+
 function renderDestinations() {
   destinationGrid.innerHTML = "";
   destinations.forEach((city) => {
@@ -1980,6 +2201,10 @@ function renderDestinations() {
           </button>
         </div>
         <p>${city.intro}</p>
+        <div class="destination-actions">
+          <button class="detail-button" type="button" data-city-detail="${city.id}">Detalles</button>
+          <button class="detail-button" type="button" data-add-city-route="${city.id}">Ruta</button>
+        </div>
       </div>
     `;
 
@@ -1993,6 +2218,11 @@ function renderDestinations() {
     card.querySelector(".favorite-button").addEventListener("click", (event) => {
       event.stopPropagation();
       toggleFavorite(city.id);
+    });
+    card.querySelectorAll("[data-city-detail], [data-add-city-route]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
     });
     destinationGrid.appendChild(card);
   });
@@ -2380,14 +2610,55 @@ if (accountForm) {
   });
 }
 if (applyProfileButton) applyProfileButton.addEventListener("click", applyAccountToTrip);
+if (saveRouteButton) saveRouteButton.addEventListener("click", saveCurrentRoute);
+if (exportGuideButton) exportGuideButton.addEventListener("click", exportGuide);
 if (openRegisterTop) openRegisterTop.addEventListener("click", () => openRegisterInfo("top"));
 if (closeRegisterModal) closeRegisterModal.addEventListener("click", closeRegisterInfo);
+if (closeCityDrawer) closeCityDrawer.addEventListener("click", closeCityDetail);
+if (cityDrawerBackdrop) cityDrawerBackdrop.addEventListener("click", closeCityDetail);
 if (registerModal) {
   registerModal.addEventListener("click", (event) => {
     if (event.target === registerModal) closeRegisterInfo();
   });
 }
 document.addEventListener("click", (event) => {
+  const detailButton = event.target.closest("[data-city-detail]");
+  if (detailButton) {
+    openCityDrawer(detailButton.dataset.cityDetail);
+    return;
+  }
+
+  const addCityButton = event.target.closest("[data-add-city-route]");
+  if (addCityButton) {
+    addCityToRoute(addCityButton.dataset.addCityRoute);
+    return;
+  }
+
+  const favoriteButton = event.target.closest("[data-favorite-city]");
+  if (favoriteButton) {
+    toggleFavorite(favoriteButton.dataset.favoriteCity);
+    openCityDrawer(favoriteButton.dataset.favoriteCity);
+    return;
+  }
+
+  const cityAiButton = event.target.closest("[data-city-ai]");
+  if (cityAiButton) {
+    askAiAboutCity(cityAiButton.dataset.cityAi);
+    return;
+  }
+
+  const loadRouteButton = event.target.closest("[data-load-route]");
+  if (loadRouteButton) {
+    loadSavedRoute(loadRouteButton.dataset.loadRoute);
+    return;
+  }
+
+  const deleteRouteButton = event.target.closest("[data-delete-route]");
+  if (deleteRouteButton) {
+    deleteSavedRoute(deleteRouteButton.dataset.deleteRoute);
+    return;
+  }
+
   const button = event.target.closest("[data-ai-context]");
   if (!button) return;
   askAiWithContext(button.dataset.aiContext);
