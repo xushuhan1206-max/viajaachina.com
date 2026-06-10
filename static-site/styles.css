@@ -329,9 +329,168 @@ button {
 
 .destinations,
 .route-planner,
+.prep-center,
 .account-section {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
+}
+
+.prep-center {
+  padding: 38px 0 8px;
+}
+
+.prep-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.prep-panel,
+.prep-module {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 12px 38px rgba(17, 24, 39, 0.08);
+}
+
+.prep-panel {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.prep-panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.prep-scenarios,
+.prep-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prep-scenarios button,
+.prep-tabs button {
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: var(--jade-dark);
+  background: #eef8f5;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.prep-scenarios button.is-active,
+.prep-tabs button.is-active {
+  color: var(--white);
+  border-color: var(--jade);
+  background: var(--jade);
+}
+
+.prep-tabs button.is-recommended:not(.is-active) {
+  border-color: rgba(217, 164, 65, 0.55);
+  background: #fff7df;
+}
+
+.prep-progress {
+  display: grid;
+  gap: 8px;
+  color: var(--jade-dark);
+  font-weight: 900;
+}
+
+.prep-progress div {
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5efec;
+}
+
+.prep-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--jade);
+  transition: width 180ms ease;
+}
+
+.prep-content {
+  display: grid;
+  gap: 12px;
+}
+
+.prep-tabs {
+  padding: 0;
+}
+
+.prep-module {
+  padding: 18px;
+}
+
+.prep-module-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.prep-module-head h3 {
+  margin: 0;
+  font-size: 1.22rem;
+}
+
+.prep-module-head span {
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--jade-dark);
+  background: #e7f4f1;
+  font-weight: 900;
+}
+
+.prep-intro {
+  margin: 12px 0 16px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.prep-checklist {
+  display: grid;
+  gap: 10px;
+}
+
+.prep-checklist label {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 12px;
+  color: var(--ink);
+  background: #f8fbfa;
+}
+
+.prep-checklist input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--jade);
+}
+
+.prep-warnings {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.prep-warnings p {
+  margin: 0;
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .account-section {
@@ -1219,6 +1378,7 @@ button {
 
   .hero-content,
   .workspace,
+  .prep-layout,
   .map-layout,
   .account-layout {
     grid-template-columns: 1fr;
@@ -1244,6 +1404,7 @@ button {
   .workspace,
   .destinations,
   .route-planner,
+  .prep-center,
   .account-section {
     width: min(100% - 28px, 1180px);
   }
@@ -1283,9 +1444,14 @@ button {
 
   .guide-grid,
   .preference-list div,
+  .prep-module-head,
   .account-form,
   .destination-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prep-module-head {
+    display: grid;
   }
 
   .destination-card {

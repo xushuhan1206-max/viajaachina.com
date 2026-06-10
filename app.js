@@ -342,6 +342,97 @@ const transportRoutes = {
 };
 
 const ACCOUNT_STORAGE_KEY = "viajaachina-demo-account";
+const PREP_STORAGE_KEY = "viajaachina-prep-state";
+
+const prepScenarios = [
+  { id: "first_time", label: "Es mi primera vez", modules: ["visa", "payments", "apps", "transport", "risks"] },
+  { id: "flight_booked", label: "Ya tengo vuelos", modules: ["visa", "payments", "apps", "risks"] },
+  { id: "less_30", label: "Viajo en menos de 30 dias", modules: ["visa", "payments", "transport", "risks"] },
+  { id: "train_route", label: "Usare trenes", modules: ["transport", "apps", "risks"] },
+];
+
+const prepModules = [
+  {
+    id: "visa",
+    title: "Visa y entrada",
+    intro: "Orientacion inicial para saber que revisar antes de comprar vuelos o reservar hoteles.",
+    checklist: [
+      "Confirmar si tu nacionalidad tiene exencion de visado o necesita visa.",
+      "Verificar duracion permitida de estancia y numero de entradas.",
+      "Revisar si entras a China continental, Hong Kong, Macao o Taiwan.",
+      "Guardar links oficiales de embajada/consulado chino o autoridad migratoria.",
+      "Tener pasaporte con vigencia suficiente y paginas libres.",
+    ],
+    warnings: [
+      "Las politicas de visa cambian: confirma siempre en fuentes oficiales.",
+      "Transito, turismo y negocios pueden tener reglas diferentes.",
+    ],
+  },
+  {
+    id: "payments",
+    title: "Pagos moviles",
+    intro: "China funciona principalmente con pagos QR. Configuralos antes de aterrizar.",
+    checklist: [
+      "Descargar Alipay y registrarte con numero internacional.",
+      "Vincular Visa/Mastercard y completar verificacion con pasaporte.",
+      "Probar una compra pequena o revisar que el codigo QR se active.",
+      "Instalar WeChat Pay como alternativa cuando sea posible.",
+      "Llevar efectivo de respaldo para comercios pequenos o fallos de tarjeta.",
+    ],
+    warnings: [
+      "Algunos comercios pequeños no aceptan tarjetas fisicas extranjeras.",
+      "Si cambias de telefono o SIM, verifica que puedas recibir codigos.",
+    ],
+  },
+  {
+    id: "apps",
+    title: "Internet y apps",
+    intro: "Prepara conectividad, mapas, traduccion y reservas antes de salir.",
+    checklist: [
+      "Contratar eSIM, roaming o plan de datos que funcione en China.",
+      "Instalar Trip.com para hoteles, trenes y entradas con tarjeta extranjera.",
+      "Instalar Amap o Baidu Maps y guardar direcciones en chino.",
+      "Preparar traductor offline o frases basicas para taxi/restaurante.",
+      "Guardar reservas y direcciones tambien en capturas de pantalla.",
+    ],
+    warnings: [
+      "Google Maps puede ser poco practico dentro de China continental.",
+      "Algunas apps occidentales pueden no funcionar igual: prepara alternativa.",
+    ],
+  },
+  {
+    id: "transport",
+    title: "Trenes y transporte",
+    intro: "El tren de alta velocidad es excelente, pero requiere planificar con pasaporte.",
+    checklist: [
+      "Comprar trenes con el mismo nombre que aparece en el pasaporte.",
+      "Llegar a estaciones grandes con 45-60 minutos de margen.",
+      "Revisar estacion exacta: muchas ciudades tienen varias estaciones.",
+      "Guardar numero de tren, horario y asiento en captura offline.",
+      "Comparar tren vs avion segun distancia y traslados reales.",
+    ],
+    warnings: [
+      "En festivos, los mejores trenes se agotan rapido.",
+      "Para Hong Kong/Macao hay controles fronterizos y reglas separadas.",
+    ],
+  },
+  {
+    id: "risks",
+    title: "Riesgos comunes",
+    intro: "Puntos donde los viajeros extranjeros suelen perder tiempo o dinero.",
+    checklist: [
+      "Evitar viajar sin reservas durante Semana Dorada u otros festivos chinos.",
+      "Reservar atracciones populares con antelacion cuando sea obligatorio.",
+      "Tener direcciones de hotel y atracciones en chino.",
+      "Preparar plan B si falla el pago movil.",
+      "Confirmar horarios de cierre, dias sin servicio y requisitos de pasaporte.",
+    ],
+    warnings: [
+      "No todas las atracciones venden entradas en taquilla el mismo dia.",
+      "El idioma puede ser una barrera fuera de zonas turisticas internacionales.",
+    ],
+  },
+];
 
 const defaultAccount = {
   id: "demo-user",
@@ -396,6 +487,11 @@ const state = {
   favorites: new Set(),
   selectedCities: [],
   difyConversationId: "",
+  prep: {
+    activeModule: "visa",
+    scenarioIds: [],
+    checked: {},
+  },
   account: { ...defaultAccount },
   answers: {
     intent: "Pendiente",
@@ -441,6 +537,11 @@ const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
+const prepScenariosContainer = document.querySelector("#prepScenarios");
+const prepTabs = document.querySelector("#prepTabs");
+const prepModule = document.querySelector("#prepModule");
+const prepProgressText = document.querySelector("#prepProgressText");
+const prepProgressBar = document.querySelector("#prepProgressBar");
 
 const CHINA_GEOJSON_URL = "/api/china-map";
 const MAP_VIEWBOX = { width: 720, height: 470, padding: 28 };
@@ -477,6 +578,129 @@ function persistAccount(status = "Guardado local") {
   } catch (error) {
     if (accountSyncStatus) accountSyncStatus.textContent = "No guardado";
   }
+}
+
+function loadPrepState() {
+  try {
+    const stored = window.localStorage.getItem(PREP_STORAGE_KEY);
+    if (stored) {
+      state.prep = { ...state.prep, ...JSON.parse(stored) };
+    }
+  } catch (error) {
+    state.prep = { activeModule: "visa", scenarioIds: [], checked: {} };
+  }
+}
+
+function persistPrepState() {
+  window.localStorage.setItem(PREP_STORAGE_KEY, JSON.stringify(state.prep));
+}
+
+function prepItemKey(moduleId, index) {
+  return `${moduleId}:${index}`;
+}
+
+function recommendedPrepModules() {
+  const ids = new Set();
+  state.prep.scenarioIds.forEach((scenarioId) => {
+    const scenario = prepScenarios.find((item) => item.id === scenarioId);
+    scenario?.modules.forEach((moduleId) => ids.add(moduleId));
+  });
+  return ids;
+}
+
+function prepCompletion() {
+  const total = prepModules.reduce((sum, module) => sum + module.checklist.length, 0);
+  const completed = prepModules.reduce(
+    (sum, module) =>
+      sum + module.checklist.filter((_, index) => state.prep.checked[prepItemKey(module.id, index)]).length,
+    0,
+  );
+  return { total, completed, percent: total ? Math.round((completed / total) * 100) : 0 };
+}
+
+function renderPrepCenter() {
+  if (!prepScenariosContainer || !prepTabs || !prepModule) return;
+
+  const recommended = recommendedPrepModules();
+  const completion = prepCompletion();
+
+  prepScenariosContainer.innerHTML = prepScenarios
+    .map(
+      (scenario) => `
+        <button class="${state.prep.scenarioIds.includes(scenario.id) ? "is-active" : ""}" type="button" data-scenario="${scenario.id}">
+          ${scenario.label}
+        </button>
+      `,
+    )
+    .join("");
+
+  prepTabs.innerHTML = prepModules
+    .map(
+      (module) => `
+        <button class="${state.prep.activeModule === module.id ? "is-active" : ""} ${recommended.has(module.id) ? "is-recommended" : ""}" type="button" data-module="${module.id}">
+          ${module.title}
+        </button>
+      `,
+    )
+    .join("");
+
+  const active = prepModules.find((module) => module.id === state.prep.activeModule) || prepModules[0];
+  prepModule.innerHTML = `
+    <div class="prep-module-head">
+      <div>
+        <p class="panel-kicker">${recommended.has(active.id) ? "Recomendado para ti" : "Checklist"}</p>
+        <h3>${active.title}</h3>
+      </div>
+      <span>${active.checklist.filter((_, index) => state.prep.checked[prepItemKey(active.id, index)]).length}/${active.checklist.length}</span>
+    </div>
+    <p class="prep-intro">${active.intro}</p>
+    <div class="prep-checklist">
+      ${active.checklist
+        .map((item, index) => {
+          const key = prepItemKey(active.id, index);
+          return `
+            <label>
+              <input type="checkbox" data-prep-item="${key}" ${state.prep.checked[key] ? "checked" : ""} />
+              <span>${item}</span>
+            </label>
+          `;
+        })
+        .join("")}
+    </div>
+    <div class="prep-warnings">
+      ${active.warnings.map((warning) => `<p>${warning}</p>`).join("")}
+    </div>
+  `;
+
+  prepProgressText.textContent = `${completion.percent}% listo`;
+  prepProgressBar.style.width = `${completion.percent}%`;
+
+  prepScenariosContainer.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.scenario;
+      state.prep.scenarioIds = state.prep.scenarioIds.includes(id)
+        ? state.prep.scenarioIds.filter((item) => item !== id)
+        : [...state.prep.scenarioIds, id];
+      persistPrepState();
+      renderPrepCenter();
+    });
+  });
+
+  prepTabs.querySelectorAll("[data-module]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.prep.activeModule = button.dataset.module;
+      persistPrepState();
+      renderPrepCenter();
+    });
+  });
+
+  prepModule.querySelectorAll("[data-prep-item]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      state.prep.checked[checkbox.dataset.prepItem] = checkbox.checked;
+      persistPrepState();
+      renderPrepCenter();
+    });
+  });
 }
 
 function showRegisterPrompt(reason) {
@@ -1799,4 +2023,6 @@ if (registerModal) {
 }
 
 loadAccount();
+loadPrepState();
+renderPrepCenter();
 resetFlow();
