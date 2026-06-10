@@ -920,13 +920,13 @@ function mapConfigState(title, text) {
 function walkCoordinates(coordinates, callback) {
   if (!coordinates) return;
   if (typeof coordinates[0] === "number") {
-    callback(normalizeGeoCoordinate(coordinates));
+    callback(coordinates);
     return;
   }
   coordinates.forEach((item) => walkCoordinates(item, callback));
 }
 
-function normalizeGeoCoordinate(coord) {
+function normalizeLngLat(coord) {
   const [first, second] = coord;
   const looksSwapped = first >= 15 && first <= 55 && second >= 70 && second <= 140;
   return looksSwapped ? [second, first] : [first, second];
@@ -937,19 +937,46 @@ function mercatorY(lat) {
   return Math.log(Math.tan(Math.PI / 4 + rad / 2));
 }
 
+function lonLatToWebMercator([lng, lat]) {
+  const earth = 6378137;
+  const x = earth * lng * Math.PI / 180;
+  const y = earth * mercatorY(lat);
+  return [x, y];
+}
+
+function isProjectedCoordinate(coord) {
+  return Math.abs(coord[0]) > 1000 || Math.abs(coord[1]) > 1000;
+}
+
 function buildProjection(geojson) {
+  const sampleCoords = [];
+  geojson.features.forEach((feature) => {
+    walkCoordinates(feature.geometry?.coordinates, (coord) => {
+      if (sampleCoords.length < 80) sampleCoords.push(coord);
+    });
+  });
+
+  const projectedCount = sampleCoords.filter(isProjectedCoordinate).length;
+  const usesProjectedCoords = projectedCount > sampleCoords.length / 2;
+
+  function sourcePoint(coord) {
+    if (usesProjectedCoords) return [coord[0], coord[1]];
+    const [lng, lat] = normalizeLngLat(coord);
+    return [lng, mercatorY(lat)];
+  }
+
   const bounds = {
-    minLng: Infinity,
-    maxLng: -Infinity,
+    minX: Infinity,
+    maxX: -Infinity,
     minY: Infinity,
     maxY: -Infinity,
   };
 
   geojson.features.forEach((feature) => {
-    walkCoordinates(feature.geometry?.coordinates, ([lng, lat]) => {
-      const y = mercatorY(lat);
-      bounds.minLng = Math.min(bounds.minLng, lng);
-      bounds.maxLng = Math.max(bounds.maxLng, lng);
+    walkCoordinates(feature.geometry?.coordinates, (coord) => {
+      const [x, y] = sourcePoint(coord);
+      bounds.minX = Math.min(bounds.minX, x);
+      bounds.maxX = Math.max(bounds.maxX, x);
       bounds.minY = Math.min(bounds.minY, y);
       bounds.maxY = Math.max(bounds.maxY, y);
     });
@@ -959,18 +986,21 @@ function buildProjection(geojson) {
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
   const scale = Math.min(
-    usableWidth / (bounds.maxLng - bounds.minLng),
+    usableWidth / (bounds.maxX - bounds.minX),
     usableHeight / (bounds.maxY - bounds.minY),
   );
-  const mapWidth = (bounds.maxLng - bounds.minLng) * scale;
+  const mapWidth = (bounds.maxX - bounds.minX) * scale;
   const mapHeight = (bounds.maxY - bounds.minY) * scale;
   const offsetX = (width - mapWidth) / 2;
   const offsetY = (height - mapHeight) / 2;
 
-  return ([lng, lat]) => {
-    const y = mercatorY(lat);
+  return (coord, type = "map") => {
+    const [x, y] =
+      type === "city" && usesProjectedCoords
+        ? lonLatToWebMercator(coord)
+        : sourcePoint(coord);
     return [
-      offsetX + (lng - bounds.minLng) * scale,
+      offsetX + (x - bounds.minX) * scale,
       offsetY + (bounds.maxY - y) * scale,
     ];
   };
@@ -979,7 +1009,7 @@ function buildProjection(geojson) {
 function ringPath(ring, project) {
   return ring
     .map((coord, index) => {
-      const [x, y] = project(normalizeGeoCoordinate(coord));
+      const [x, y] = project(coord);
       return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ") + " Z";
@@ -1023,6 +1053,9 @@ async function loadChinaGeojson() {
 
 function renderGeojsonMap(geojson) {
   if (!realMap) return;
+  if (!geojson?.features?.length) {
+    throw new Error("Invalid China GeoJSON");
+  }
   mapProjection = buildProjection(geojson);
   markerLayers.clear();
 
@@ -1049,7 +1082,7 @@ function renderGeojsonMap(geojson) {
   });
 
   destinations.forEach((city) => {
-    const [x, y] = mapProjection([city.lng, city.lat]);
+    const [x, y] = mapProjection([city.lng, city.lat], "city");
     const marker = createSvgElement("g", {
       class: "geo-city-marker",
       tabindex: "0",
@@ -1144,7 +1177,7 @@ function updateGeojsonRoute(selected) {
   if (selected.length >= 2) {
     const points = selected
       .map((city) => {
-        const [x, y] = mapProjection ? mapProjection([city.lng, city.lat]) : [city.x, city.y];
+        const [x, y] = mapProjection ? mapProjection([city.lng, city.lat], "city") : [city.x, city.y];
         return `${x.toFixed(2)},${y.toFixed(2)}`;
       })
       .join(" ");
