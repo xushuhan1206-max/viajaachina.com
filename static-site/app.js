@@ -2260,21 +2260,171 @@ function askAiAboutPlace(placeId) {
   requestDifyFollowup(prompt);
 }
 
+function printableRows(items, renderItem) {
+  return asArray(items).map(renderItem).join("");
+}
+
+function buildPrintableGuideHtml() {
+  const data = itineraryContent?.__viajaachinaData || null;
+  const guideText = itineraryContent?.innerText?.trim();
+  const selected = selectedCityNames();
+  const favorites = favoriteCityNames();
+  const generatedAt = new Date().toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const profileHtml = `
+    <section>
+      <h2>Perfil del viaje</h2>
+      <div class="meta-grid">
+        <span><strong>Duración</strong>${escapeHtml(state.answers.duration)}</span>
+        <span><strong>Presupuesto</strong>${escapeHtml(state.answers.budget)}</span>
+        <span><strong>Intereses</strong>${escapeHtml(state.answers.interests)}</span>
+        <span><strong>Viajeros</strong>${escapeHtml(state.answers.travelers)}</span>
+        <span><strong>Ciudades seleccionadas</strong>${escapeHtml(selected.join(", ") || "Pendiente")}</span>
+        <span><strong>Favoritos</strong>${escapeHtml(favorites.join(", ") || "Pendiente")}</span>
+      </div>
+    </section>
+  `;
+
+  const structuredHtml = data
+    ? `
+      <section>
+        <h2>Resumen</h2>
+        <p>${escapeHtml(data.summary || "Guía generada por viajaachina.")}</p>
+      </section>
+      ${
+        asArray(data.recommended_cities).length
+          ? `<section><h2>Ciudades recomendadas</h2><div class="card-grid">${printableRows(
+              data.recommended_cities,
+              (city) => `
+                <article>
+                  <h3>${escapeHtml(city.city_name || city.city_id || "Ciudad")}</h3>
+                  <p>${escapeHtml(city.reason || "")}</p>
+                  <small>${Number(city.days) || "?"} días · ajuste ${Number(city.fit_score) || 0}/100</small>
+                </article>
+              `,
+            )}</div></section>`
+          : ""
+      }
+      ${
+        asArray(data.route_segments).length
+          ? `<section><h2>Ruta y transporte</h2><table><thead><tr><th>Tramo</th><th>Transporte</th><th>Tiempo</th><th>Precio</th><th>Nota</th></tr></thead><tbody>${printableRows(
+              data.route_segments,
+              (segment) => `
+                <tr>
+                  <td>${escapeHtml(segment.from || "")} → ${escapeHtml(segment.to || "")}</td>
+                  <td>${escapeHtml(segment.transport || "")}</td>
+                  <td>${escapeHtml(segment.time || "")}</td>
+                  <td>${escapeHtml(segment.price || "")}</td>
+                  <td>${escapeHtml(segment.note || "")}</td>
+                </tr>
+              `,
+            )}</tbody></table></section>`
+          : ""
+      }
+      ${
+        asArray(data.places_to_consider).length
+          ? `<section><h2>Lugares clave</h2><div class="card-grid">${printableRows(
+              data.places_to_consider,
+              (place) => `
+                <article>
+                  <h3>${escapeHtml(place.place_name || "Lugar")}</h3>
+                  <small>${escapeHtml(place.city_name || "")}</small>
+                  <p>${escapeHtml(place.why || "")}</p>
+                  <p>${escapeHtml(place.booking_note || "")}</p>
+                </article>
+              `,
+            )}</div></section>`
+          : ""
+      }
+      ${
+        asArray(data.prep_tasks).length
+          ? `<section><h2>Checklist antes de viajar</h2><ul class="checklist-print">${printableRows(
+              data.prep_tasks,
+              (task) => `<li><strong>${escapeHtml(task.category || "prep")}:</strong> ${escapeHtml(task.task || "")} <em>${escapeHtml(task.priority || "media")}</em></li>`,
+            )}</ul></section>`
+          : ""
+      }
+      ${
+        asArray(data.risk_alerts).length
+          ? `<section><h2>Riesgos a revisar</h2><ul class="checklist-print">${printableRows(
+              data.risk_alerts,
+              (risk) => `<li><strong>${escapeHtml(risk.type || "riesgo")}:</strong> ${escapeHtml(risk.message || "")}</li>`,
+            )}</ul></section>`
+          : ""
+      }
+    `
+    : `<section><h2>Guía</h2><pre>${escapeHtml(guideText || "")}</pre></section>`;
+
+  return `
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>Guía viajaachina</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { margin: 0; padding: 32px; color: #14211d; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; background: #fff; }
+          header { display: grid; gap: 8px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 3px solid #0f766e; }
+          header span { width: fit-content; border-radius: 999px; padding: 6px 10px; color: #0f4f46; background: #e7f4f1; font-weight: 800; }
+          h1 { margin: 0; font-size: 34px; line-height: 1.05; }
+          h2 { margin: 0 0 10px; font-size: 20px; color: #0f4f46; }
+          h3 { margin: 0 0 6px; font-size: 15px; }
+          p { margin: 0 0 8px; }
+          small, em { color: #64748b; font-style: normal; }
+          section { break-inside: avoid; margin: 0 0 22px; }
+          .meta-grid, .card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .meta-grid span, article { border: 1px solid #dbe6e2; border-radius: 8px; padding: 11px; background: #fbfdfc; }
+          .meta-grid strong { display: block; color: #0f4f46; font-size: 12px; text-transform: uppercase; }
+          table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          th, td { border: 1px solid #dbe6e2; padding: 8px; text-align: left; vertical-align: top; }
+          th { color: #0f4f46; background: #e7f4f1; }
+          .checklist-print { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+          .checklist-print li { border: 1px solid #dbe6e2; border-radius: 8px; padding: 9px; }
+          pre { white-space: pre-wrap; font: inherit; }
+          footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #dbe6e2; color: #64748b; font-size: 12px; }
+          @page { margin: 14mm; }
+          @media print { body { padding: 0; } button { display: none; } }
+        </style>
+      </head>
+      <body>
+        <header>
+          <span>viajaachina · guía gratuita</span>
+          <h1>Guía visual para viajar a China</h1>
+          <p>Generada el ${escapeHtml(generatedAt)}. Verifica visados, precios, horarios y entradas en fuentes oficiales antes de reservar.</p>
+        </header>
+        ${profileHtml}
+        ${structuredHtml}
+        <footer>
+          viajaachina ayuda a organizar decisiones de viaje. La información puede cambiar y debe verificarse en fuentes oficiales.
+        </footer>
+        <script>window.addEventListener("load", () => window.print());</script>
+      </body>
+    </html>
+  `;
+}
+
 function exportGuide() {
   const guideText = itineraryContent?.innerText?.trim();
   if (!guideText || guideText.includes("Tu guia aparecera aqui")) {
     showRegisterPrompt("top");
-    addMessage("agent", "Genera una guia primero y despues podras exportarla como archivo Markdown.");
+    addMessage("agent", "Genera una guia primero y despues podras exportarla como PDF.");
     return;
   }
-  const markdown = `# Guia viajaachina\n\n## Perfil\n- Duracion: ${state.answers.duration}\n- Presupuesto: ${state.answers.budget}\n- Intereses: ${state.answers.interests}\n- Ciudades seleccionadas: ${selectedCityNames().join(", ") || "ninguna"}\n- Favoritos: ${favoriteCityNames().join(", ") || "ninguno"}\n\n## Guia\n${guideText}\n`;
-  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+  const blob = new Blob([buildPrintableGuideHtml()], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "guia-viajaachina.md";
-  link.click();
-  URL.revokeObjectURL(url);
+  const printWindow = window.open(url, "_blank", "noopener,noreferrer");
+  if (!printWindow) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "guia-viajaachina.html";
+    link.click();
+    addMessage("agent", "Tu navegador bloqueo la ventana de impresion. Descargue una version HTML que puedes abrir y guardar como PDF.");
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 function escapeHtml(value) {
