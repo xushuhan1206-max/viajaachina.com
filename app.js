@@ -639,9 +639,149 @@ const defaultAccount = {
   memory:
     "Prefiere una ruta clara, pocos cambios de hotel y explicaciones practicas sobre pagos, transporte y entradas.",
   favoriteCityIds: [],
+  favoritePlaces: [],
   savedRoutes: [],
+  aiMemories: [],
   updatedAt: "",
 };
+
+const placesCatalog = [
+  {
+    id: "forbidden-city",
+    name: "Ciudad Prohibida",
+    cityId: "beijing",
+    cityName: "Pekin",
+    type: "Patrimonio",
+    note: "Reserva con antelacion y lleva pasaporte.",
+    aliases: ["ciudad prohibida", "forbidden city", "palacio imperial", "故宫"],
+  },
+  {
+    id: "mutianyu-great-wall",
+    name: "Gran Muralla Mutianyu",
+    cityId: "beijing",
+    cityName: "Pekin",
+    type: "Excursion",
+    note: "Tramo recomendado para primer viaje, menos intenso que Badaling.",
+    aliases: ["gran muralla", "mutianyu", "great wall", "muralla china", "长城"],
+  },
+  {
+    id: "temple-of-heaven",
+    name: "Templo del Cielo",
+    cityId: "beijing",
+    cityName: "Pekin",
+    type: "Historia",
+    note: "Muy bueno para combinar con comida local y parques.",
+    aliases: ["templo del cielo", "temple of heaven", "天坛"],
+  },
+  {
+    id: "summer-palace",
+    name: "Palacio de Verano",
+    cityId: "beijing",
+    cityName: "Pekin",
+    type: "Jardin imperial",
+    note: "Plan de medio dia, revisar clima.",
+    aliases: ["palacio de verano", "summer palace", "颐和园"],
+  },
+  {
+    id: "the-bund",
+    name: "Bund",
+    cityId: "shanghai",
+    cityName: "Shanghai",
+    type: "Paseo urbano",
+    note: "Mejor al atardecer o de noche.",
+    aliases: ["bund", "el bund", "外滩"],
+  },
+  {
+    id: "yu-garden",
+    name: "Jardin Yuyuan",
+    cityId: "shanghai",
+    cityName: "Shanghai",
+    type: "Jardin",
+    note: "Suele estar lleno; ir temprano.",
+    aliases: ["yuyuan", "jardin yuyuan", "yu garden", "豫园"],
+  },
+  {
+    id: "shanghai-museum",
+    name: "Museo de Shanghai",
+    cityId: "shanghai",
+    cityName: "Shanghai",
+    type: "Museo",
+    note: "Bueno para dias de lluvia o ritmo tranquilo.",
+    aliases: ["museo de shanghai", "shanghai museum", "上海博物馆"],
+  },
+  {
+    id: "terracotta-warriors",
+    name: "Guerreros de Terracota",
+    cityId: "xian",
+    cityName: "Xi'an",
+    type: "Patrimonio",
+    note: "Queda fuera del centro; reservar tiempo de traslado.",
+    aliases: ["guerreros de terracota", "terracotta warriors", "terracotta army", "兵马俑"],
+  },
+  {
+    id: "xian-city-wall",
+    name: "Muralla de Xi'an",
+    cityId: "xian",
+    cityName: "Xi'an",
+    type: "Historia",
+    note: "Se puede recorrer en bici si el clima acompana.",
+    aliases: ["muralla de xian", "muralla de xi'an", "xian city wall", "西安城墙"],
+  },
+  {
+    id: "muslim-quarter",
+    name: "Barrio musulman de Xi'an",
+    cityId: "xian",
+    cityName: "Xi'an",
+    type: "Comida local",
+    note: "Ideal para comida callejera, llevar efectivo de respaldo.",
+    aliases: ["barrio musulman", "muslim quarter", "回民街"],
+  },
+  {
+    id: "chengdu-panda-base",
+    name: "Base de Pandas de Chengdu",
+    cityId: "chengdu",
+    cityName: "Chengdu",
+    type: "Naturaleza",
+    note: "Ir por la manana para ver mas actividad.",
+    aliases: ["base de pandas", "pandas de chengdu", "chengdu panda base", "熊猫基地"],
+  },
+  {
+    id: "kuanzhai-alley",
+    name: "Callejones Kuanzhai",
+    cityId: "chengdu",
+    cityName: "Chengdu",
+    type: "Paseo",
+    note: "Buen lugar para ritmo relajado y snacks.",
+    aliases: ["kuanzhai", "callejones kuanzhai", "宽窄巷子"],
+  },
+  {
+    id: "west-lake",
+    name: "Lago del Oeste",
+    cityId: "hangzhou",
+    cityName: "Hangzhou",
+    type: "Paisaje",
+    note: "Muy buena escapada desde Shanghai.",
+    aliases: ["lago del oeste", "west lake", "西湖"],
+  },
+  {
+    id: "canton-tower",
+    name: "Torre Canton",
+    cityId: "guangzhou",
+    cityName: "Guangzhou",
+    type: "Mirador",
+    note: "Revisar visibilidad antes de subir.",
+    aliases: ["torre canton", "canton tower", "广州塔"],
+  },
+  {
+    id: "victoria-harbour",
+    name: "Victoria Harbour",
+    cityId: "hongkong",
+    cityName: "Hong Kong",
+    type: "Panorama",
+    note: "Recordar que Hong Kong tiene controles y reglas separadas.",
+    aliases: ["victoria harbour", "puerto victoria", "维多利亚港"],
+  },
+];
 
 const cityDecisionDetails = {
   beijing: {
@@ -781,6 +921,10 @@ const savedRoutes = document.querySelector("#savedRoutes");
 const agentMemorySummary = document.querySelector("#agentMemorySummary");
 const saveRouteButton = document.querySelector("#saveRouteButton");
 const exportGuideButton = document.querySelector("#exportGuideButton");
+const openTripHubTop = document.querySelector("#openTripHubTop");
+const openTripHubFab = document.querySelector("#openTripHubFab");
+const tripHubCountTop = document.querySelector("#tripHubCountTop");
+const tripHubCountFab = document.querySelector("#tripHubCountFab");
 const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
@@ -789,6 +933,11 @@ const cityDrawer = document.querySelector("#cityDrawer");
 const cityDrawerContent = document.querySelector("#cityDrawerContent");
 const closeCityDrawer = document.querySelector("#closeCityDrawer");
 const cityDrawerBackdrop = document.querySelector("#cityDrawerBackdrop");
+const tripHubDrawer = document.querySelector("#tripHubDrawer");
+const tripHubBackdrop = document.querySelector("#tripHubBackdrop");
+const closeTripHub = document.querySelector("#closeTripHub");
+const tripHubTabs = document.querySelector("#tripHubTabs");
+const tripHubContent = document.querySelector("#tripHubContent");
 const prepScenariosContainer = document.querySelector("#prepScenarios");
 const prepTabs = document.querySelector("#prepTabs");
 const prepModule = document.querySelector("#prepModule");
@@ -805,6 +954,7 @@ let leafletLoading = null;
 let leafletMap = null;
 let leafletGeoLayer = null;
 let leafletRouteLines = [];
+let activeTripHubTab = "summary";
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -813,6 +963,8 @@ function loadAccount() {
     const parsed = stored ? JSON.parse(stored) : {};
     state.account = { ...defaultAccount, ...parsed };
     state.account.savedRoutes = state.account.savedRoutes || [];
+    state.account.favoritePlaces = state.account.favoritePlaces || [];
+    state.account.aiMemories = state.account.aiMemories || [];
     state.difyConversationId = window.localStorage.getItem("viajaachina:dify_conversation_id") || "";
   } catch (error) {
     state.account = { ...defaultAccount };
@@ -823,6 +975,9 @@ function loadAccount() {
 
 function persistAccount(status = "Guardado local") {
   state.account.favoriteCityIds = [...state.favorites];
+  state.account.favoritePlaces = state.account.favoritePlaces || [];
+  state.account.savedRoutes = state.account.savedRoutes || [];
+  state.account.aiMemories = state.account.aiMemories || [];
   state.account.updatedAt = new Date().toISOString();
 
   try {
@@ -1105,6 +1260,85 @@ function favoriteCityNames() {
     .map((city) => city.name);
 }
 
+function favoritePlaceIds() {
+  return new Set((state.account.favoritePlaces || []).map((place) => place.id));
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function detectPlaces(text) {
+  const normalized = normalizeText(text);
+  if (!normalized.trim()) return [];
+  const savedIds = favoritePlaceIds();
+  return placesCatalog.filter((place) => {
+    if (savedIds.has(place.id)) return false;
+    return place.aliases.some((alias) => normalized.includes(normalizeText(alias)));
+  });
+}
+
+function recommendedPlacesForCity(cityId) {
+  return placesCatalog.filter((place) => place.cityId === cityId).slice(0, 5);
+}
+
+function addFavoritePlace(placeOrId, source = "manual") {
+  const catalogPlace = typeof placeOrId === "string" ? placesCatalog.find((place) => place.id === placeOrId) : placeOrId;
+  if (!catalogPlace) return;
+  const current = state.account.favoritePlaces || [];
+  if (current.some((place) => place.id === catalogPlace.id)) return;
+  state.account.favoritePlaces = [
+    {
+      id: catalogPlace.id,
+      name: catalogPlace.name,
+      cityId: catalogPlace.cityId || "unknown",
+      cityName: catalogPlace.cityName || "Ciudad pendiente",
+      source,
+      note: catalogPlace.note || "",
+      createdAt: new Date().toISOString(),
+    },
+    ...current,
+  ];
+  persistAccount("Lugar guardado en Mi Viaje");
+  renderAccount(false);
+  renderTripHub();
+  showRegisterPrompt("top");
+}
+
+function removeFavoritePlace(placeId) {
+  state.account.favoritePlaces = (state.account.favoritePlaces || []).filter((place) => place.id !== placeId);
+  persistAccount("Lugar eliminado");
+  renderAccount(false);
+  renderTripHub();
+}
+
+function addPlaceCandidateMessage(places, source) {
+  if (!places.length || !messages) return;
+  const card = document.createElement("div");
+  card.className = "place-detection";
+  card.innerHTML = `
+    <strong>Lugares detectados</strong>
+    <p>${source === "agent" ? "El agente menciono estos lugares. Puedes guardarlos en Mi Viaje." : "Detecte posibles lugares de interes en tu mensaje."}</p>
+    <div class="place-chip-row">
+      ${places
+        .map(
+          (place) => `
+            <button type="button" data-save-detected-place="${place.id}">
+              ${place.name}
+              <small>${place.cityName}</small>
+            </button>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+  messages.appendChild(card);
+  messages.scrollTop = messages.scrollHeight;
+}
+
 function fallbackCityDetail(city) {
   return {
     stay: "1-2 dias",
@@ -1155,6 +1389,7 @@ function loadSavedRoute(routeId) {
   state.selectedCities = [...route.cityIds];
   renderDestinations();
   renderMap();
+  renderTripHub();
   document.querySelector(".route-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -1162,6 +1397,7 @@ function deleteSavedRoute(routeId) {
   state.account.savedRoutes = (state.account.savedRoutes || []).filter((item) => item.id !== routeId);
   persistAccount("Ruta eliminada");
   renderAccount(false);
+  renderTripHub();
 }
 
 function renderAccount(syncForm = true) {
@@ -1181,6 +1417,7 @@ function renderAccount(syncForm = true) {
   const memoryCount = state.account.memory.trim() ? 1 : 0;
   accountStats.innerHTML = `
     <span>Favoritos: ${state.favorites.size}</span>
+    <span>Lugares: ${(state.account.favoritePlaces || []).length}</span>
     <span>Rutas: ${(state.account.savedRoutes || []).length}</span>
     <span>Memorias: ${memoryCount}</span>
   `;
@@ -1211,6 +1448,221 @@ function renderAccount(syncForm = true) {
           .join("")
       : '<span class="muted-note">Selecciona ciudades y guarda una ruta para verla aqui.</span>';
   }
+  updateTripHubCounts();
+}
+
+function tripHubCount() {
+  return state.favorites.size + (state.account.favoritePlaces || []).length + (state.account.savedRoutes || []).length;
+}
+
+function updateTripHubCounts() {
+  const count = tripHubCount();
+  if (tripHubCountTop) tripHubCountTop.textContent = count;
+  if (tripHubCountFab) tripHubCountFab.textContent = count;
+}
+
+function prepRiskSummary() {
+  const highRiskCount = prepModules.filter((module) => prepModuleStatus(module).className === "is-high").length;
+  const completion = prepCompletion();
+  return { highRiskCount, completion };
+}
+
+function renderPlaceCards(places) {
+  if (!places.length) return '<p class="muted-note">Aun no hay lugares guardados.</p>';
+  return places
+    .map(
+      (place) => `
+        <article class="hub-item-card">
+          <div>
+            <strong>${place.name}</strong>
+            <span>${place.cityName || "Ciudad pendiente"} · ${place.source}</span>
+            ${place.note ? `<p>${place.note}</p>` : ""}
+          </div>
+          <div class="hub-item-actions">
+            <button type="button" data-city-detail="${place.cityId}">Ciudad</button>
+            <button type="button" data-place-ai="${place.id}">IA</button>
+            <button type="button" data-remove-place="${place.id}">Eliminar</button>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderTripHub() {
+  if (!tripHubTabs || !tripHubContent) return;
+  updateTripHubCounts();
+  const tabs = [
+    ["summary", "Resumen"],
+    ["cities", "Ciudades"],
+    ["places", "Lugares"],
+    ["route", "Ruta"],
+    ["prep", "Preparacion"],
+    ["memory", "Memoria IA"],
+  ];
+  const favoritePlaces = state.account.favoritePlaces || [];
+  const routeCities = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
+  const favoriteCities = [...state.favorites].map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
+  const prep = prepRiskSummary();
+
+  tripHubTabs.innerHTML = tabs
+    .map(
+      ([id, label]) => `
+        <button class="${activeTripHubTab === id ? "is-active" : ""}" type="button" data-trip-tab="${id}">
+          ${label}
+        </button>
+      `,
+    )
+    .join("");
+
+  const sections = {
+    summary: `
+      <div class="hub-summary-grid">
+        <span><strong>${state.answers.duration}</strong> Duracion</span>
+        <span><strong>${state.answers.budget}</strong> Presupuesto</span>
+        <span><strong>${favoriteCities.length}</strong> Ciudades guardadas</span>
+        <span><strong>${favoritePlaces.length}</strong> Lugares guardados</span>
+        <span><strong>${prep.completion.percent}%</strong> Preparacion</span>
+        <span><strong>${prep.highRiskCount}</strong> Riesgos altos</span>
+      </div>
+      <div class="hub-section">
+        <h3>Ruta actual</h3>
+        <p>${routeCities.length ? routeCities.map((city) => city.name).join(" -> ") : "Todavia no hay ruta seleccionada."}</p>
+      </div>
+    `,
+    cities: `
+      <div class="hub-section">
+        <h3>Ciudades guardadas</h3>
+        ${
+          favoriteCities.length
+            ? favoriteCities
+                .map(
+                  (city) => `
+                    <article class="hub-item-card">
+                      <div><strong>${city.name}</strong><span>${city.region}</span></div>
+                      <div class="hub-item-actions">
+                        <button type="button" data-add-city-route="${city.id}">Ruta</button>
+                        <button type="button" data-city-detail="${city.id}">Detalles</button>
+                        <button type="button" data-remove-city="${city.id}">Eliminar</button>
+                      </div>
+                    </article>
+                  `,
+                )
+                .join("")
+            : '<p class="muted-note">Marca ciudades con la estrella para guardarlas aqui.</p>'
+        }
+      </div>
+    `,
+    places: `
+      <div class="hub-section">
+        <h3>Lugares guardados</h3>
+        ${renderPlaceCards(favoritePlaces)}
+      </div>
+      <form class="manual-place-form" id="manualPlaceForm">
+        <h3>Agregar lugar manualmente</h3>
+        <input name="name" type="text" placeholder="Nombre del lugar" required />
+        <select name="cityId">
+          <option value="unknown">Ciudad pendiente</option>
+          ${destinations.map((city) => `<option value="${city.id}">${city.name}</option>`).join("")}
+        </select>
+        <input name="note" type="text" placeholder="Nota opcional" />
+        <button class="secondary-button" type="submit">Guardar lugar</button>
+      </form>
+    `,
+    route: `
+      <div class="hub-section">
+        <h3>Ruta actual</h3>
+        ${routeCities.length ? `<ol class="hub-route-list">${routeCities.map((city) => `<li>${city.name}</li>`).join("")}</ol>` : '<p class="muted-note">Selecciona ciudades para construir una ruta.</p>'}
+        <button class="secondary-button" type="button" data-save-current-route>Guardar ruta actual</button>
+      </div>
+      <div class="hub-section">
+        <h3>Rutas guardadas</h3>
+        ${
+          (state.account.savedRoutes || []).length
+            ? state.account.savedRoutes
+                .map(
+                  (route) => `
+                    <article class="hub-item-card">
+                      <div><strong>${route.name}</strong><span>${route.budget || "Presupuesto pendiente"}</span></div>
+                      <div class="hub-item-actions">
+                        <button type="button" data-load-route="${route.id}">Cargar</button>
+                        <button type="button" data-delete-route="${route.id}">Eliminar</button>
+                      </div>
+                    </article>
+                  `,
+                )
+                .join("")
+            : '<p class="muted-note">Guarda tu primera ruta desde el mapa.</p>'
+        }
+      </div>
+    `,
+    prep: `
+      <div class="hub-section">
+        <h3>Preparacion</h3>
+        <div class="hub-summary-grid">
+          <span><strong>${prep.completion.percent}%</strong> Completado</span>
+          <span><strong>${prep.highRiskCount}</strong> Riesgos altos</span>
+        </div>
+        ${prepModules
+          .map((module) => {
+            const status = prepModuleStatus(module);
+            const progress = prepModuleProgress(module);
+            return `<article class="hub-item-card"><div><strong>${module.title}</strong><span>${status.label} · ${progress.completed}/${progress.total}</span></div></article>`;
+          })
+          .join("")}
+      </div>
+    `,
+    memory: `
+      <div class="hub-section">
+        <h3>Memoria del agente</h3>
+        <p>${state.account.memory}</p>
+        <p class="muted-note">Pendiente: conectar esta memoria con Supabase y Dify memory.</p>
+      </div>
+      <div class="hub-section">
+        <h3>Preferencias</h3>
+        <p>${state.account.travelStyle} · ${state.account.budget} · ${state.account.interests}</p>
+      </div>
+    `,
+  };
+
+  tripHubContent.innerHTML = sections[activeTripHubTab] || sections.summary;
+
+  const manualPlaceForm = tripHubContent.querySelector("#manualPlaceForm");
+  if (manualPlaceForm) {
+    manualPlaceForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = new FormData(manualPlaceForm);
+      const cityId = data.get("cityId");
+      const city = destinations.find((item) => item.id === cityId);
+      addFavoritePlace(
+        {
+          id: `manual-${Date.now()}`,
+          name: data.get("name"),
+          cityId,
+          cityName: city?.name || "Ciudad pendiente",
+          note: data.get("note"),
+          aliases: [],
+        },
+        "manual",
+      );
+      activeTripHubTab = "places";
+      renderTripHub();
+    });
+  }
+}
+
+function openTripHub(tab = activeTripHubTab) {
+  activeTripHubTab = tab;
+  renderTripHub();
+  if (!tripHubDrawer) return;
+  tripHubDrawer.classList.add("is-open");
+  tripHubDrawer.setAttribute("aria-hidden", "false");
+}
+
+function closeTripHubDrawer() {
+  if (!tripHubDrawer) return;
+  tripHubDrawer.classList.remove("is-open");
+  tripHubDrawer.setAttribute("aria-hidden", "true");
 }
 
 function collectAccountForm() {
@@ -1250,6 +1702,7 @@ function addMessage(role, text) {
   bubble.className = `message ${role}`;
   bubble.textContent = text;
   messages.appendChild(bubble);
+  addPlaceCandidateMessage(detectPlaces(text), role);
   messages.scrollTop = messages.scrollHeight;
 }
 
@@ -1351,6 +1804,7 @@ function openCityDrawer(cityId) {
   const city = destinations.find((item) => item.id === cityId);
   if (!city || !cityDrawer || !cityDrawerContent) return;
   const detail = cityDetail(city);
+  const cityPlaces = recommendedPlacesForCity(city.id);
   cityDrawerContent.innerHTML = `
     <img class="city-drawer-image" src="${destinationPhoto(city)}" alt="${city.name}" />
     <p class="panel-kicker">${city.region}</p>
@@ -1368,6 +1822,26 @@ function openCityDrawer(cityId) {
     <div class="city-detail-block">
       <h3>Experiencias clave</h3>
       <ul>${detail.mustDo.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </div>
+    <div class="city-detail-block">
+      <h3>Lugares recomendados</h3>
+      ${
+        cityPlaces.length
+          ? `<div class="place-save-list">${cityPlaces
+              .map(
+                (place) => `
+                  <article>
+                    <strong>${place.name}</strong>
+                    <span>${place.type} · ${place.note}</span>
+                    <button type="button" data-save-place="${place.id}">
+                      ${favoritePlaceIds().has(place.id) ? "Guardado" : "Guardar"}
+                    </button>
+                  </article>
+                `,
+              )
+              .join("")}</div>`
+          : `<p class="muted-note">Aun no hay lugares cargados para esta ciudad.</p>`
+      }
     </div>
     <div class="city-detail-block">
       <h3>Combina bien con</h3>
@@ -1400,6 +1874,19 @@ function askAiAboutCity(cityId) {
   if (!city) return;
   const detail = cityDetail(city);
   const prompt = `Ayudame a decidir si ${city.name} encaja en mi viaje a China. Datos: ${city.intro}. Estancia recomendada: ${detail.stay}. Ideal para: ${detail.bestFor.join(", ")}. Experiencias: ${detail.mustDo.join(", ")}. Riesgos: ${detail.risks.join(", ")}. Mis intereses: ${state.answers.interests}. Presupuesto: ${state.answers.budget}.`;
+  closeCityDetail();
+  addMessage("user", prompt);
+  focusChat();
+  requestDifyFollowup(prompt);
+}
+
+function askAiAboutPlace(placeId) {
+  const place =
+    (state.account.favoritePlaces || []).find((item) => item.id === placeId) ||
+    placesCatalog.find((item) => item.id === placeId);
+  if (!place) return;
+  const prompt = `Ayudame a visitar ${place.name} en ${place.cityName || "China"}. Explica si vale la pena para mi viaje, cuanto tiempo dedicar, como llegar, que reservar, riesgos practicos y como combinarlo con mi ruta actual: ${selectedCityNames().join(" -> ") || "sin ruta seleccionada"}.`;
+  closeTripHubDrawer();
   closeCityDetail();
   addMessage("user", prompt);
   focusChat();
@@ -2155,6 +2642,7 @@ function toggleFavorite(cityId) {
   renderDestinations();
   renderMap();
   renderAccount(false);
+  renderTripHub();
   showRegisterPrompt("favorite");
 }
 
@@ -2174,6 +2662,7 @@ function addCityToRoute(cityId) {
   }
   renderDestinations();
   renderMap();
+  renderTripHub();
   closeCityDetail();
 }
 
@@ -2612,16 +3101,67 @@ if (accountForm) {
 if (applyProfileButton) applyProfileButton.addEventListener("click", applyAccountToTrip);
 if (saveRouteButton) saveRouteButton.addEventListener("click", saveCurrentRoute);
 if (exportGuideButton) exportGuideButton.addEventListener("click", exportGuide);
+if (openTripHubTop) openTripHubTop.addEventListener("click", () => openTripHub("summary"));
+if (openTripHubFab) openTripHubFab.addEventListener("click", () => openTripHub("summary"));
 if (openRegisterTop) openRegisterTop.addEventListener("click", () => openRegisterInfo("top"));
 if (closeRegisterModal) closeRegisterModal.addEventListener("click", closeRegisterInfo);
 if (closeCityDrawer) closeCityDrawer.addEventListener("click", closeCityDetail);
 if (cityDrawerBackdrop) cityDrawerBackdrop.addEventListener("click", closeCityDetail);
+if (closeTripHub) closeTripHub.addEventListener("click", closeTripHubDrawer);
+if (tripHubBackdrop) tripHubBackdrop.addEventListener("click", closeTripHubDrawer);
 if (registerModal) {
   registerModal.addEventListener("click", (event) => {
     if (event.target === registerModal) closeRegisterInfo();
   });
 }
 document.addEventListener("click", (event) => {
+  const tripTab = event.target.closest("[data-trip-tab]");
+  if (tripTab) {
+    activeTripHubTab = tripTab.dataset.tripTab;
+    renderTripHub();
+    return;
+  }
+
+  const saveDetectedPlace = event.target.closest("[data-save-detected-place]");
+  if (saveDetectedPlace) {
+    addFavoritePlace(saveDetectedPlace.dataset.saveDetectedPlace, "chat");
+    saveDetectedPlace.disabled = true;
+    saveDetectedPlace.textContent = "Guardado";
+    return;
+  }
+
+  const savePlace = event.target.closest("[data-save-place]");
+  if (savePlace) {
+    addFavoritePlace(savePlace.dataset.savePlace, "city_detail");
+    const openCityId = placesCatalog.find((place) => place.id === savePlace.dataset.savePlace)?.cityId;
+    if (openCityId) openCityDrawer(openCityId);
+    return;
+  }
+
+  const removePlace = event.target.closest("[data-remove-place]");
+  if (removePlace) {
+    removeFavoritePlace(removePlace.dataset.removePlace);
+    return;
+  }
+
+  const placeAiButton = event.target.closest("[data-place-ai]");
+  if (placeAiButton) {
+    askAiAboutPlace(placeAiButton.dataset.placeAi);
+    return;
+  }
+
+  const saveCurrentRouteButton = event.target.closest("[data-save-current-route]");
+  if (saveCurrentRouteButton) {
+    saveCurrentRoute();
+    return;
+  }
+
+  const removeCityButton = event.target.closest("[data-remove-city]");
+  if (removeCityButton) {
+    toggleFavorite(removeCityButton.dataset.removeCity);
+    return;
+  }
+
   const detailButton = event.target.closest("[data-city-detail]");
   if (detailButton) {
     openCityDrawer(detailButton.dataset.cityDetail);

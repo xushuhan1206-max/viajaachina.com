@@ -20,6 +20,10 @@
           </a>
           <div class="nav-actions">
             <button class="icon-button" type="button" title="Idioma">ES</button>
+            <button class="trip-hub-button" type="button" id="openTripHubTop">
+              Mi Viaje
+              <span id="tripHubCountTop">0</span>
+            </button>
             <button class="ghost-button" type="button" id="openRegisterTop">Registrarse</button>
             <button class="ghost-button" type="button" id="resetTop">Nuevo viaje</button>
           </div>
@@ -214,6 +218,10 @@
     </main>
 
     <div class="register-toast" id="registerToast" role="status" aria-live="polite"></div>
+    <button class="trip-hub-fab" id="openTripHubFab" type="button">
+      <span>Mi Viaje</span>
+      <strong id="tripHubCountFab">0</strong>
+    </button>
     <div class="register-modal" id="registerModal" aria-hidden="true">
       <div class="register-modal-card" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
         <button class="modal-close" id="closeRegisterModal" type="button" aria-label="Cerrar">×</button>
@@ -235,6 +243,19 @@
       <aside class="city-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cityDrawerTitle">
         <button class="modal-close" id="closeCityDrawer" type="button" aria-label="Cerrar">×</button>
         <div id="cityDrawerContent"></div>
+      </aside>
+    </div>
+    <div class="trip-hub-drawer" id="tripHubDrawer" aria-hidden="true">
+      <div class="trip-hub-backdrop" id="tripHubBackdrop"></div>
+      <aside class="trip-hub-panel" role="dialog" aria-modal="true" aria-labelledby="tripHubTitle">
+        <button class="modal-close" id="closeTripHub" type="button" aria-label="Cerrar">×</button>
+        <p class="panel-kicker">Mi Viaje Inteligente</p>
+        <h2 id="tripHubTitle">Tu viaje a China</h2>
+        <p class="trip-hub-subtitle">
+          Todo lo que guardas aqui ayuda al agente a recordar ciudades, lugares, ruta y preparacion.
+        </p>
+        <div class="trip-hub-tabs" id="tripHubTabs" aria-label="Secciones de Mi Viaje"></div>
+        <div class="trip-hub-content" id="tripHubContent"></div>
       </aside>
     </div>
     <script src="app.js"></script>
