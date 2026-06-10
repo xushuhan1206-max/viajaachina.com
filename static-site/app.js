@@ -1723,6 +1723,15 @@ function addMessage(role, text) {
   messages.scrollTop = messages.scrollHeight;
 }
 
+function addLoadingMessage() {
+  const bubble = document.createElement("div");
+  bubble.className = "message agent is-loading";
+  bubble.innerHTML = `<span></span><span></span><span></span><strong>Consultando viajaachina...</strong>`;
+  messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+  return bubble;
+}
+
 function focusChat() {
   document.querySelector(".chat-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
   window.setTimeout(() => chatInput?.focus(), 260);
@@ -3095,26 +3104,46 @@ function detectIntent(text) {
   return intentOptions.find((intent) => intent.id === "general_question");
 }
 
-function setIntent(text) {
+function setIntent(text, options = {}) {
+  const { silent = false } = options;
   const intent = detectIntent(text);
   state.answers.intent = intent.label;
   state.step = 0;
   renderPreferences();
-  addMessage("agent", intent.reply);
-  window.setTimeout(askNextQuestion, 260);
+  if (!silent) {
+    addMessage("agent", intent.reply);
+    window.setTimeout(askNextQuestion, 260);
+  }
 }
 
 async function requestDifyFollowup(text) {
   statusPill.textContent = "IA";
-  addMessage("agent", "Estoy consultando el agente de viajaachina...");
+  chatInput.disabled = true;
+  quickReplies.innerHTML = "";
+  const loadingMessage = addLoadingMessage();
   try {
     const answer = await callDifyAgent(text, "chat");
+    loadingMessage.remove();
     if (answer) addAgentAnswer(answer);
   } catch (error) {
+    loadingMessage.remove();
     addMessage("agent", `Ahora mismo no pude conectar con Dify. Detalle tecnico: ${error.message}. Mantengo tu respuesta en el plan y puedes seguir usando el demo.`);
   } finally {
     statusPill.textContent = "En progreso";
+    chatInput.disabled = false;
+    chatInput.focus();
   }
+}
+
+function isCompleteAgentQuestion(text) {
+  const normalized = normalizeText(text);
+  const signals = [
+    /\b\d+\s*(dias|dia|semanas|semana)\b/.test(normalized),
+    /(octubre|septiembre|noviembre|diciembre|enero|febrero|marzo|abril|mayo|junio|julio|agosto)/.test(normalized),
+    /(historia|comida|naturaleza|cultura|tren|alipay|wechat|entrada|reserva|ciudad|ruta|itinerario|guia)/.test(normalized),
+    /(beijing|pekin|shanghai|xian|chengdu|guangzhou|shenzhen|hong kong)/.test(normalized),
+  ].filter(Boolean).length;
+  return text.length > 70 || signals >= 2;
 }
 
 function handleAnswer(text, options = {}) {
@@ -3128,6 +3157,11 @@ function handleAnswer(text, options = {}) {
   const changedByHints = applyTripHints(cleanText);
 
   if (state.step < 0) {
+    if (shouldAskAgent && isCompleteAgentQuestion(cleanText)) {
+      setIntent(cleanText, { silent: true });
+      requestDifyFollowup(cleanText);
+      return;
+    }
     setIntent(cleanText);
     if (shouldAskAgent) requestDifyFollowup(cleanText);
     return;
@@ -3142,8 +3176,12 @@ function handleAnswer(text, options = {}) {
       renderPreferences();
     }
     advancePastAnswered();
-    window.setTimeout(askNextQuestion, 260);
-    if (shouldAskAgent) requestDifyFollowup(cleanText);
+    if (shouldAskAgent && isCompleteAgentQuestion(cleanText)) {
+      requestDifyFollowup(cleanText);
+    } else {
+      window.setTimeout(askNextQuestion, 260);
+      if (shouldAskAgent) requestDifyFollowup(cleanText);
+    }
   } else {
     requestDifyFollowup(cleanText);
   }
