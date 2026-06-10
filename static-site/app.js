@@ -356,6 +356,45 @@ const prepModules = [
     id: "visa",
     title: "Visa y entrada",
     intro: "Orientacion inicial para saber que revisar antes de comprar vuelos o reservar hoteles.",
+    diagnostics: [
+      {
+        id: "entry_rule",
+        question: "Ya sabes si puedes entrar sin visa o necesitas solicitar una?",
+        options: [
+          { value: "confirmed", label: "Confirmado", risk: "ready" },
+          { value: "unsure", label: "No estoy seguro", risk: "high" },
+          { value: "checking", label: "Lo estoy revisando", risk: "medium" },
+        ],
+      },
+      {
+        id: "regions",
+        question: "Tu ruta incluye China continental, Hong Kong, Macao o Taiwan?",
+        options: [
+          { value: "mainland", label: "Solo continental", risk: "low" },
+          { value: "mixed", label: "Incluye fronteras", risk: "medium" },
+          { value: "unknown", label: "No lo se", risk: "medium" },
+        ],
+      },
+    ],
+    guide: {
+      why: [
+        "La entrada define si puedes comprar vuelos con tranquilidad.",
+        "China continental, Hong Kong, Macao y Taiwan pueden tener requisitos distintos.",
+      ],
+      how: [
+        "Confirma nacionalidad, motivo del viaje, dias de estancia y numero de entradas.",
+        "Revisa la web oficial de la embajada/consulado chino de tu pais.",
+        "Guarda capturas de la regla aplicable y de tu pasaporte.",
+      ],
+      failures: [
+        "Pensar que una exencion aplica a todas las nacionalidades.",
+        "Hacer una ruta con salida y reentrada sin confirmar entradas multiples.",
+      ],
+      backup: [
+        "Si hay duda, diseña una ruta mas simple sin cruces fronterizos.",
+        "Deja margen antes del viaje para tramites o cambios de vuelo.",
+      ],
+    },
     checklist: [
       "Confirmar si tu nacionalidad tiene exencion de visado o necesita visa.",
       "Verificar duracion permitida de estancia y numero de entradas.",
@@ -372,6 +411,45 @@ const prepModules = [
     id: "payments",
     title: "Pagos moviles",
     intro: "China funciona principalmente con pagos QR. Configuralos antes de aterrizar.",
+    diagnostics: [
+      {
+        id: "alipay",
+        question: "Ya vinculaste una tarjeta internacional en Alipay?",
+        options: [
+          { value: "tested", label: "Si, probado", risk: "ready" },
+          { value: "linked", label: "Solo vinculada", risk: "medium" },
+          { value: "none", label: "Todavia no", risk: "high" },
+        ],
+      },
+      {
+        id: "backup_money",
+        question: "Tienes plan B si el QR falla?",
+        options: [
+          { value: "cash_wechat", label: "Efectivo + WeChat", risk: "ready" },
+          { value: "cash", label: "Solo efectivo", risk: "medium" },
+          { value: "none", label: "No", risk: "high" },
+        ],
+      },
+    ],
+    guide: {
+      why: [
+        "Muchos pagos cotidianos se hacen por codigo QR.",
+        "Una tarjeta fisica extranjera no siempre resuelve restaurantes, taxis o tiendas pequenas.",
+      ],
+      how: [
+        "Instala Alipay, registrate, vincula tarjeta Visa/Mastercard y completa verificacion.",
+        "Activa WeChat Pay si puedes, como segunda opcion.",
+        "Lleva algo de efectivo para fallos de red, limite o verificacion.",
+      ],
+      failures: [
+        "Llegar sin poder recibir SMS de verificacion.",
+        "Usar una tarjeta con bloqueo internacional o limite bajo.",
+      ],
+      backup: [
+        "Pide al hotel ayuda para taxi o pagos urgentes.",
+        "Ten efectivo en RMB para transporte corto y comida basica.",
+      ],
+    },
     checklist: [
       "Descargar Alipay y registrarte con numero internacional.",
       "Vincular Visa/Mastercard y completar verificacion con pasaporte.",
@@ -388,6 +466,45 @@ const prepModules = [
     id: "apps",
     title: "Internet y apps",
     intro: "Prepara conectividad, mapas, traduccion y reservas antes de salir.",
+    diagnostics: [
+      {
+        id: "data",
+        question: "Ya tienes datos moviles que funcionen en China?",
+        options: [
+          { value: "ready", label: "eSIM/roaming listo", risk: "ready" },
+          { value: "choosing", label: "Comparando opciones", risk: "medium" },
+          { value: "none", label: "No", risk: "high" },
+        ],
+      },
+      {
+        id: "local_apps",
+        question: "Tienes apps locales para mapa, reservas y traduccion?",
+        options: [
+          { value: "ready", label: "Todo instalado", risk: "ready" },
+          { value: "partial", label: "Me falta alguna", risk: "medium" },
+          { value: "none", label: "No", risk: "high" },
+        ],
+      },
+    ],
+    guide: {
+      why: [
+        "Sin datos, pagar, traducir, pedir taxi o ubicar una estacion se vuelve dificil.",
+        "Las apps occidentales no siempre son suficientes dentro de China continental.",
+      ],
+      how: [
+        "Define eSIM, roaming o SIM local antes de salir.",
+        "Instala Trip.com, Alipay, WeChat, Amap/Baidu Maps y traductor.",
+        "Guarda direcciones de hoteles y estaciones en chino y en capturas offline.",
+      ],
+      failures: [
+        "Comprar eSIM incompatible o que no activa datos en China.",
+        "Depender solo de Google Maps para moverte dentro de ciudades.",
+      ],
+      backup: [
+        "Guarda el nombre chino de cada hotel y atraccion.",
+        "Pide tarjetas impresas o capturas en recepcion del hotel.",
+      ],
+    },
     checklist: [
       "Contratar eSIM, roaming o plan de datos que funcione en China.",
       "Instalar Trip.com para hoteles, trenes y entradas con tarjeta extranjera.",
@@ -404,6 +521,45 @@ const prepModules = [
     id: "transport",
     title: "Trenes y transporte",
     intro: "El tren de alta velocidad es excelente, pero requiere planificar con pasaporte.",
+    diagnostics: [
+      {
+        id: "tickets",
+        question: "Ya sabes como comprar trenes con pasaporte?",
+        options: [
+          { value: "ready", label: "Si", risk: "ready" },
+          { value: "need_help", label: "Necesito guia", risk: "medium" },
+          { value: "none", label: "No", risk: "high" },
+        ],
+      },
+      {
+        id: "stations",
+        question: "Revisaste la estacion exacta de salida y llegada?",
+        options: [
+          { value: "checked", label: "Revisado", risk: "ready" },
+          { value: "later", label: "Lo hare luego", risk: "medium" },
+          { value: "unknown", label: "No sabia", risk: "high" },
+        ],
+      },
+    ],
+    guide: {
+      why: [
+        "Las estaciones grandes pueden estar lejos entre si.",
+        "El nombre del billete debe coincidir con el pasaporte.",
+      ],
+      how: [
+        "Compra billetes en Trip.com o canal oficial usando el mismo nombre del pasaporte.",
+        "Llega 45-60 minutos antes a estaciones grandes.",
+        "Confirma ciudad, estacion, numero de tren, asiento y puerta.",
+      ],
+      failures: [
+        "Ir a Beijing Railway Station cuando el tren sale de Beijing South.",
+        "Reservar vuelos cortos sin contar traslados y control de seguridad.",
+      ],
+      backup: [
+        "Guarda alternativas en tren mas tarde o avion para tramos largos.",
+        "Si pierdes un tren, ve al mostrador con pasaporte y numero de reserva.",
+      ],
+    },
     checklist: [
       "Comprar trenes con el mismo nombre que aparece en el pasaporte.",
       "Llegar a estaciones grandes con 45-60 minutos de margen.",
@@ -420,6 +576,45 @@ const prepModules = [
     id: "risks",
     title: "Riesgos comunes",
     intro: "Puntos donde los viajeros extranjeros suelen perder tiempo o dinero.",
+    diagnostics: [
+      {
+        id: "holiday",
+        question: "Tu viaje coincide con festivos chinos o temporada alta?",
+        options: [
+          { value: "no", label: "No", risk: "low" },
+          { value: "yes", label: "Si", risk: "high" },
+          { value: "unknown", label: "No lo se", risk: "medium" },
+        ],
+      },
+      {
+        id: "reservations",
+        question: "Ya sabes que atracciones requieren reserva previa?",
+        options: [
+          { value: "ready", label: "Si", risk: "ready" },
+          { value: "partial", label: "Parcial", risk: "medium" },
+          { value: "none", label: "No", risk: "high" },
+        ],
+      },
+    ],
+    guide: {
+      why: [
+        "Los principales problemas no son solo la ruta: son pagos, reservas, idioma y festivos.",
+        "Un viajero extranjero pierde mas tiempo cuando no sabe que debe reservar antes.",
+      ],
+      how: [
+        "Marca festivos chinos antes de cerrar fechas.",
+        "Lista atracciones con reserva obligatoria y fecha de apertura de venta.",
+        "Guarda pasaporte, reservas, direcciones en chino y telefonos de hotel.",
+      ],
+      failures: [
+        "Llegar a una atraccion popular sin entrada reservada.",
+        "No poder explicar destino en taxi o restaurante fuera de zonas turisticas.",
+      ],
+      backup: [
+        "Ten una atraccion alternativa por ciudad.",
+        "Reserva hoteles cerca de metro para reducir dependencia de taxis.",
+      ],
+    },
     checklist: [
       "Evitar viajar sin reservas durante Semana Dorada u otros festivos chinos.",
       "Reservar atracciones populares con antelacion cuando sea obligatorio.",
@@ -491,6 +686,7 @@ const state = {
     activeModule: "visa",
     scenarioIds: [],
     checked: {},
+    answers: {},
   },
   account: { ...defaultAccount },
   answers: {
@@ -585,9 +781,12 @@ function loadPrepState() {
     const stored = window.localStorage.getItem(PREP_STORAGE_KEY);
     if (stored) {
       state.prep = { ...state.prep, ...JSON.parse(stored) };
+      state.prep.checked = state.prep.checked || {};
+      state.prep.answers = state.prep.answers || {};
+      state.prep.scenarioIds = state.prep.scenarioIds || [];
     }
   } catch (error) {
-    state.prep = { activeModule: "visa", scenarioIds: [], checked: {} };
+    state.prep = { activeModule: "visa", scenarioIds: [], checked: {}, answers: {} };
   }
 }
 
@@ -597,6 +796,10 @@ function persistPrepState() {
 
 function prepItemKey(moduleId, index) {
   return `${moduleId}:${index}`;
+}
+
+function prepAnswerKey(moduleId, questionId) {
+  return `${moduleId}:${questionId}`;
 }
 
 function recommendedPrepModules() {
@@ -618,11 +821,49 @@ function prepCompletion() {
   return { total, completed, percent: total ? Math.round((completed / total) * 100) : 0 };
 }
 
+function prepModuleProgress(module) {
+  const total = module.checklist.length;
+  const completed = module.checklist.filter((_, index) => state.prep.checked[prepItemKey(module.id, index)]).length;
+  return { total, completed, percent: total ? Math.round((completed / total) * 100) : 0 };
+}
+
+function prepModuleStatus(module) {
+  const priority = { high: 4, medium: 3, low: 2, ready: 1 };
+  let strongestRisk = "low";
+  const missingAnswers = module.diagnostics.filter((question) => !state.prep.answers[prepAnswerKey(module.id, question.id)]).length;
+
+  module.diagnostics.forEach((question) => {
+    const value = state.prep.answers[prepAnswerKey(module.id, question.id)];
+    const option = question.options.find((item) => item.value === value);
+    if (option && priority[option.risk] > priority[strongestRisk]) {
+      strongestRisk = option.risk;
+    }
+  });
+
+  const progress = prepModuleProgress(module);
+  if (strongestRisk === "high") return { label: "Riesgo alto", className: "is-high" };
+  if (missingAnswers > 0) return { label: "Diagnostico pendiente", className: "is-medium" };
+  if (progress.percent === 100 && strongestRisk === "ready") return { label: "Listo", className: "is-ready" };
+  if (progress.percent >= 60) return { label: "Casi listo", className: "is-low" };
+  return { label: "Accion pendiente", className: "is-medium" };
+}
+
+function renderPrepGuideList(items, ordered = false) {
+  const tag = ordered ? "ol" : "ul";
+  return `<${tag}>${items.map((item) => `<li>${item}</li>`).join("")}</${tag}>`;
+}
+
 function renderPrepCenter() {
   if (!prepScenariosContainer || !prepTabs || !prepModule) return;
 
   const recommended = recommendedPrepModules();
   const completion = prepCompletion();
+  const highRiskCount = prepModules.filter((module) => prepModuleStatus(module).className === "is-high").length;
+  const pendingDiagnosisCount = prepModules.reduce(
+    (sum, module) =>
+      sum + module.diagnostics.filter((question) => !state.prep.answers[prepAnswerKey(module.id, question.id)]).length,
+    0,
+  );
 
   prepScenariosContainer.innerHTML = prepScenarios
     .map(
@@ -645,16 +886,65 @@ function renderPrepCenter() {
     .join("");
 
   const active = prepModules.find((module) => module.id === state.prep.activeModule) || prepModules[0];
+  const activeProgress = prepModuleProgress(active);
+  const activeStatus = prepModuleStatus(active);
   prepModule.innerHTML = `
     <div class="prep-module-head">
       <div>
         <p class="panel-kicker">${recommended.has(active.id) ? "Recomendado para ti" : "Checklist"}</p>
         <h3>${active.title}</h3>
       </div>
-      <span>${active.checklist.filter((_, index) => state.prep.checked[prepItemKey(active.id, index)]).length}/${active.checklist.length}</span>
+      <div class="prep-module-badges">
+        <span class="prep-status ${activeStatus.className}">${activeStatus.label}</span>
+        <span>${activeProgress.completed}/${activeProgress.total}</span>
+      </div>
     </div>
     <p class="prep-intro">${active.intro}</p>
+    <div class="prep-diagnostics">
+      <h4>Diagnostico rapido</h4>
+      ${active.diagnostics
+        .map(
+          (question) => `
+            <div class="prep-question">
+              <p>${question.question}</p>
+              <div class="prep-answer-row">
+                ${question.options
+                  .map((option) => {
+                    const key = prepAnswerKey(active.id, question.id);
+                    const selected = state.prep.answers[key] === option.value;
+                    return `
+                      <button class="${selected ? "is-active" : ""}" type="button" data-prep-answer="${key}" data-value="${option.value}">
+                        ${option.label}
+                      </button>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+    <div class="prep-guide-grid">
+      <article class="prep-guide-card">
+        <h4>Por que importa</h4>
+        ${renderPrepGuideList(active.guide.why)}
+      </article>
+      <article class="prep-guide-card">
+        <h4>Como hacerlo</h4>
+        ${renderPrepGuideList(active.guide.how, true)}
+      </article>
+      <article class="prep-guide-card">
+        <h4>Si falla</h4>
+        ${renderPrepGuideList(active.guide.failures)}
+      </article>
+      <article class="prep-guide-card">
+        <h4>Plan B</h4>
+        ${renderPrepGuideList(active.guide.backup)}
+      </article>
+    </div>
     <div class="prep-checklist">
+      <h4>Confirmacion final</h4>
       ${active.checklist
         .map((item, index) => {
           const key = prepItemKey(active.id, index);
@@ -674,6 +964,16 @@ function renderPrepCenter() {
 
   prepProgressText.textContent = `${completion.percent}% listo`;
   prepProgressBar.style.width = `${completion.percent}%`;
+  const existingRisk = document.querySelector("#prepRiskSummary");
+  if (existingRisk) existingRisk.remove();
+  const riskSummary = document.createElement("div");
+  riskSummary.className = "prep-risk-summary";
+  riskSummary.id = "prepRiskSummary";
+  riskSummary.innerHTML = `
+    <p><strong>${highRiskCount}</strong> riesgos altos</p>
+    <p><strong>${pendingDiagnosisCount}</strong> respuestas pendientes</p>
+  `;
+  prepScenariosContainer.insertAdjacentElement("afterend", riskSummary);
 
   prepScenariosContainer.querySelectorAll("[data-scenario]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -689,6 +989,14 @@ function renderPrepCenter() {
   prepTabs.querySelectorAll("[data-module]").forEach((button) => {
     button.addEventListener("click", () => {
       state.prep.activeModule = button.dataset.module;
+      persistPrepState();
+      renderPrepCenter();
+    });
+  });
+
+  prepModule.querySelectorAll("[data-prep-answer]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.prep.answers[button.dataset.prepAnswer] = button.dataset.value;
       persistPrepState();
       renderPrepCenter();
     });

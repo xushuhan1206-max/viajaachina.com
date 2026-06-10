@@ -418,6 +418,25 @@ button {
   transition: width 180ms ease;
 }
 
+.prep-risk-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.prep-risk-summary p {
+  margin: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--jade-dark);
+  background: #e7f4f1;
+  font-weight: 850;
+}
+
+.prep-risk-summary strong {
+  font-size: 1.1rem;
+}
+
 .prep-content {
   display: grid;
   gap: 12px;
@@ -443,7 +462,15 @@ button {
   font-size: 1.22rem;
 }
 
-.prep-module-head span {
+.prep-module-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.prep-module-badges span,
+.prep-module-head > span {
   border-radius: 999px;
   padding: 7px 10px;
   color: var(--jade-dark);
@@ -451,10 +478,107 @@ button {
   font-weight: 900;
 }
 
+.prep-status.is-high {
+  color: #7f1d1d;
+  background: #fee2e2;
+}
+
+.prep-status.is-medium {
+  color: #7c2d12;
+  background: #ffedd5;
+}
+
+.prep-status.is-low {
+  color: #1f4f46;
+  background: #e7f4f1;
+}
+
+.prep-status.is-ready {
+  color: #14532d;
+  background: #dcfce7;
+}
+
 .prep-intro {
   margin: 12px 0 16px;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.prep-diagnostics {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f3faf8;
+}
+
+.prep-diagnostics h4,
+.prep-checklist h4,
+.prep-guide-card h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.prep-question {
+  display: grid;
+  gap: 8px;
+}
+
+.prep-question p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.prep-answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prep-answer-row button {
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: var(--jade-dark);
+  background: var(--white);
+  font-weight: 850;
+  font-size: 0.82rem;
+}
+
+.prep-answer-row button.is-active {
+  color: var(--white);
+  border-color: var(--jade);
+  background: var(--jade);
+}
+
+.prep-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.prep-guide-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfdfc;
+}
+
+.prep-guide-card ul,
+.prep-guide-card ol {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.prep-guide-card li + li {
+  margin-top: 6px;
 }
 
 .prep-checklist {
@@ -1443,6 +1567,7 @@ button {
   }
 
   .guide-grid,
+  .prep-guide-grid,
   .preference-list div,
   .prep-module-head,
   .account-form,
