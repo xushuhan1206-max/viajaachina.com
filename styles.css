@@ -317,6 +317,28 @@ button {
   font-weight: 700;
 }
 
+.ai-context-button {
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 7px 12px;
+  color: var(--white);
+  background: var(--jade);
+  font-size: 0.8rem;
+  font-weight: 900;
+  box-shadow: 0 8px 22px rgba(15, 118, 110, 0.16);
+}
+
+.ai-context-button:hover {
+  background: var(--jade-dark);
+}
+
+.ai-context-button.is-wide {
+  width: 100%;
+  border-radius: 8px;
+  justify-content: center;
+}
+
 .workspace {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;

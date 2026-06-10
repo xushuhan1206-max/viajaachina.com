@@ -895,6 +895,7 @@ function renderPrepCenter() {
         <h3>${active.title}</h3>
       </div>
       <div class="prep-module-badges">
+        <button class="ai-context-button" type="button" data-ai-context="prep">Preguntar a IA</button>
         <span class="prep-status ${activeStatus.className}">${activeStatus.label}</span>
         <span>${activeProgress.completed}/${activeProgress.total}</span>
       </div>
@@ -1116,6 +1117,11 @@ function addMessage(role, text) {
   messages.scrollTop = messages.scrollHeight;
 }
 
+function focusChat() {
+  document.querySelector(".chat-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => chatInput?.focus(), 260);
+}
+
 function selectedCityNames() {
   return state.selectedCities
     .map((id) => destinations.find((city) => city.id === id))
@@ -1152,6 +1158,57 @@ async function callDifyAgent(message, mode = "chat") {
     window.localStorage.setItem("viajaachina:dify_conversation_id", data.conversationId);
   }
   return data.answer || "";
+}
+
+function prepModuleSummary(module) {
+  if (!module) return "";
+  const status = prepModuleStatus(module).label;
+  const answers = module.diagnostics
+    .map((question) => {
+      const value = state.prep.answers[prepAnswerKey(module.id, question.id)];
+      const option = question.options.find((item) => item.value === value);
+      return `${question.question} ${option ? option.label : "sin responder"}`;
+    })
+    .join(" | ");
+  const progress = prepModuleProgress(module);
+  return `${module.title}: ${status}, progreso ${progress.completed}/${progress.total}. ${answers}`;
+}
+
+function buildAiPrompt(kind) {
+  const selected = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
+  const favoriteNames = favoriteCityNames();
+  const activePrep = prepModules.find((module) => module.id === state.prep.activeModule) || prepModules[0];
+
+  if (kind === "route") {
+    const route = selected.length ? selected.map((city) => city.name).join(" -> ") : "sin ruta seleccionada";
+    const segmentText = routeSegments(selected)
+      .map(
+        (segment) =>
+          `${segment.from.name} -> ${segment.to.name}: ${segment.options
+            .map((option) => `${option.mode} ${option.time} ${option.price}`)
+            .join("; ")}`,
+      )
+      .join(" | ");
+    return `Ayudame a evaluar esta ruta para un viajero hispanohablante en China. Ruta seleccionada: ${route}. Tramos disponibles: ${segmentText || "todavia no hay dos ciudades seleccionadas"}. Favoritos: ${favoriteNames.join(", ") || "ninguno"}. Dame consejos practicos, riesgos y si conviene cambiar el orden.`;
+  }
+
+  if (kind === "prep") {
+    return `Ayudame a completar la preparacion antes de viajar a China. Modulo actual: ${prepModuleSummary(activePrep)}. Escenarios marcados: ${state.prep.scenarioIds.join(", ") || "ninguno"}. Favoritos: ${favoriteNames.join(", ") || "ninguno"}. Explica que falta, que es urgente y que pasos deberia hacer ahora.`;
+  }
+
+  if (kind === "favorites") {
+    return `Convierte mis ciudades favoritas en una ruta inicial para China. Favoritos: ${favoriteNames.join(", ") || "ninguno"}. Preferencias: ${state.answers.interests}. Presupuesto: ${state.answers.budget}. Dame una ruta clara y que debo preparar antes de viajar.`;
+  }
+
+  return "Ayudame a planificar mi viaje a China con una guia practica en espanol.";
+}
+
+function askAiWithContext(kind) {
+  const prompt = buildAiPrompt(kind);
+  addMessage("user", prompt);
+  showRegisterPrompt("chat");
+  focusChat();
+  requestDifyFollowup(prompt);
 }
 
 function escapeHtml(value) {
@@ -1997,6 +2054,7 @@ function renderMap() {
     <span>Favoritos: ${state.favorites.size}</span>
     <span>Seleccionadas: ${state.selectedCities.length}</span>
     <span>Tramos: ${Math.max(state.selectedCities.length - 1, 0)}</span>
+    <button class="ai-context-button is-wide" type="button" data-ai-context="route">Preguntar a IA sobre esta ruta</button>
   `;
 }
 
@@ -2329,6 +2387,11 @@ if (registerModal) {
     if (event.target === registerModal) closeRegisterInfo();
   });
 }
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-ai-context]");
+  if (!button) return;
+  askAiWithContext(button.dataset.aiContext);
+});
 
 loadAccount();
 loadPrepState();
