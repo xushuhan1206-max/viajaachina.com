@@ -2260,6 +2260,160 @@ function askAiAboutPlace(placeId) {
   requestDifyFollowup(prompt);
 }
 
+function agentCityName(city) {
+  return city?.city_name || city?.name || city?.city_id || "Ciudad";
+}
+
+function agentPlaceName(place) {
+  return place?.place_name || place?.name || "Lugar";
+}
+
+function guideAverageFit(cities) {
+  const scores = asArray(cities)
+    .map((city) => Number(city.fit_score))
+    .filter((score) => Number.isFinite(score) && score > 0);
+  if (!scores.length) return 0;
+  return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+}
+
+function guideTotalDays(cities) {
+  return asArray(cities).reduce((sum, city) => {
+    const days = Number(city.days);
+    return sum + (Number.isFinite(days) ? days : 0);
+  }, 0);
+}
+
+function guidePriorityClass(value) {
+  const priority = normalizeText(value || "");
+  if (priority.includes("alta")) return "is-high";
+  if (priority.includes("baja")) return "is-low";
+  return "is-medium";
+}
+
+function guideRiskClass(value) {
+  const type = normalizeText(value || "");
+  if (type.includes("visa") || type.includes("pago") || type.includes("conect") || type.includes("entrada")) return "is-high";
+  if (type.includes("idioma") || type.includes("temporada") || type.includes("reserva")) return "is-medium";
+  return "is-low";
+}
+
+function guideCityPhoto(city) {
+  const destination = findDestinationByAgentCity(city);
+  return destination ? destinationPhoto(destination) : "assets/destinations/beijing-card.jpg";
+}
+
+function guideMetrics(data) {
+  const cities = asArray(data?.recommended_cities);
+  return [
+    { label: "Ciudades", value: cities.length || "-" },
+    { label: "Dias sugeridos", value: guideTotalDays(cities) || state.answers.duration || "-" },
+    { label: "Ajuste medio", value: guideAverageFit(cities) ? `${guideAverageFit(cities)}/100` : "-" },
+    { label: "Tramos", value: asArray(data?.route_segments).length || "-" },
+  ];
+}
+
+function renderGuideActions(data, prefix = "guide") {
+  const cities = asArray(data?.recommended_cities);
+  const places = asArray(data?.places_to_consider);
+  const segments = asArray(data?.route_segments);
+  const prepTasks = asArray(data?.prep_tasks);
+  return `
+    <div class="agent-action-row guide-action-row">
+      ${cities.length ? `<button type="button" data-save-${prefix}-cities>Guardar ciudades</button>` : ""}
+      ${places.length ? `<button type="button" data-save-${prefix}-places>Guardar lugares</button>` : ""}
+      ${segments.length || cities.length ? `<button type="button" data-save-${prefix}-route>Guardar ruta</button>` : ""}
+      ${prepTasks.length ? `<button type="button" data-save-${prefix}-prep>Añadir checklist</button>` : ""}
+      <button class="is-primary" type="button" data-save-${prefix}-all>Guardar todo</button>
+    </div>
+  `;
+}
+
+function renderGuideMetricRow(data) {
+  return `<div class="guide-metric-row">${guideMetrics(data)
+    .map((metric) => `<span><strong>${escapeHtml(metric.value)}</strong>${escapeHtml(metric.label)}</span>`)
+    .join("")}</div>`;
+}
+
+function renderVisualCityCards(cities) {
+  return asArray(cities)
+    .map(
+      (city, index) => `
+        <article class="visual-city-card">
+          <img src="${escapeHtml(guideCityPhoto(city))}" alt="${escapeHtml(agentCityName(city))}" loading="lazy" />
+          <div>
+            <span class="guide-step">Ciudad ${index + 1}</span>
+            <h4>${escapeHtml(agentCityName(city))}</h4>
+            <p>${escapeHtml(city.reason || "Ciudad recomendada por el agente.")}</p>
+            <div class="city-score-line">
+              <span>${Number(city.days) || "?"} dias</span>
+              <span>${Number(city.fit_score) || 0}/100 ajuste</span>
+            </div>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderRouteTimeline(segments) {
+  return asArray(segments)
+    .map(
+      (segment, index) => `
+        <li>
+          <i>${index + 1}</i>
+          <div>
+            <strong>${escapeHtml(segment.from || "")} -> ${escapeHtml(segment.to || "")}</strong>
+            <span>${escapeHtml(segment.transport || "Transporte")} · ${escapeHtml(segment.time || "Tiempo pendiente")} · ${escapeHtml(segment.price || "Precio pendiente")}</span>
+            ${segment.note ? `<p>${escapeHtml(segment.note)}</p>` : ""}
+          </div>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function renderPlaceTiles(places) {
+  return asArray(places)
+    .map(
+      (place) => `
+        <article class="guide-place-tile">
+          <span>${escapeHtml(place.city_name || "China")}</span>
+          <h4>${escapeHtml(agentPlaceName(place))}</h4>
+          <p>${escapeHtml(place.why || place.booking_note || "Lugar sugerido para revisar.")}</p>
+          ${place.booking_note ? `<small>${escapeHtml(place.booking_note)}</small>` : ""}
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderPrepTaskCards(tasks) {
+  return asArray(tasks)
+    .map(
+      (task) => `
+        <li class="${guidePriorityClass(task.priority)}">
+          <span>${escapeHtml(task.priority || "media")}</span>
+          <strong>${escapeHtml(task.category || "prep")}</strong>
+          <p>${escapeHtml(task.task || "")}</p>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function renderRiskCards(risks) {
+  return asArray(risks)
+    .map(
+      (risk) => `
+        <li class="${guideRiskClass(risk.type)}">
+          <span>${escapeHtml(risk.type || "riesgo")}</span>
+          <p>${escapeHtml(risk.message || "")}</p>
+        </li>
+      `,
+    )
+    .join("");
+}
+
 function printableRows(items, renderItem) {
   return asArray(items).map(renderItem).join("");
 }
@@ -2294,16 +2448,19 @@ function buildPrintableGuideHtml() {
       <section>
         <h2>Resumen</h2>
         <p>${escapeHtml(data.summary || "Guía generada por viajaachina.")}</p>
+        <div class="metric-row">${guideMetrics(data)
+          .map((metric) => `<span><strong>${escapeHtml(metric.value)}</strong>${escapeHtml(metric.label)}</span>`)
+          .join("")}</div>
       </section>
       ${
         asArray(data.recommended_cities).length
-          ? `<section><h2>Ciudades recomendadas</h2><div class="card-grid">${printableRows(
+          ? `<section><h2>Ciudades recomendadas</h2><div class="city-print-grid">${printableRows(
               data.recommended_cities,
               (city) => `
-                <article>
-                  <h3>${escapeHtml(city.city_name || city.city_id || "Ciudad")}</h3>
+                <article class="city-print-card">
+                  <span>${Number(city.days) || "?"} dias · ${Number(city.fit_score) || 0}/100 ajuste</span>
+                  <h3>${escapeHtml(agentCityName(city))}</h3>
                   <p>${escapeHtml(city.reason || "")}</p>
-                  <small>${Number(city.days) || "?"} días · ajuste ${Number(city.fit_score) || 0}/100</small>
                 </article>
               `,
             )}</div></section>`
@@ -2311,18 +2468,19 @@ function buildPrintableGuideHtml() {
       }
       ${
         asArray(data.route_segments).length
-          ? `<section><h2>Ruta y transporte</h2><table><thead><tr><th>Tramo</th><th>Transporte</th><th>Tiempo</th><th>Precio</th><th>Nota</th></tr></thead><tbody>${printableRows(
+          ? `<section><h2>Ruta y transporte</h2><ol class="route-print-list">${printableRows(
               data.route_segments,
-              (segment) => `
-                <tr>
-                  <td>${escapeHtml(segment.from || "")} → ${escapeHtml(segment.to || "")}</td>
-                  <td>${escapeHtml(segment.transport || "")}</td>
-                  <td>${escapeHtml(segment.time || "")}</td>
-                  <td>${escapeHtml(segment.price || "")}</td>
-                  <td>${escapeHtml(segment.note || "")}</td>
-                </tr>
+              (segment, index) => `
+                <li>
+                  <i>${index + 1}</i>
+                  <div>
+                    <strong>${escapeHtml(segment.from || "")} → ${escapeHtml(segment.to || "")}</strong>
+                    <span>${escapeHtml(segment.transport || "")} · ${escapeHtml(segment.time || "")} · ${escapeHtml(segment.price || "")}</span>
+                    ${segment.note ? `<p>${escapeHtml(segment.note)}</p>` : ""}
+                  </div>
+                </li>
               `,
-            )}</tbody></table></section>`
+            )}</ol></section>`
           : ""
       }
       ${
@@ -2331,7 +2489,7 @@ function buildPrintableGuideHtml() {
               data.places_to_consider,
               (place) => `
                 <article>
-                  <h3>${escapeHtml(place.place_name || "Lugar")}</h3>
+                  <h3>${escapeHtml(agentPlaceName(place))}</h3>
                   <small>${escapeHtml(place.city_name || "")}</small>
                   <p>${escapeHtml(place.why || "")}</p>
                   <p>${escapeHtml(place.booking_note || "")}</p>
@@ -2344,7 +2502,7 @@ function buildPrintableGuideHtml() {
         asArray(data.prep_tasks).length
           ? `<section><h2>Checklist antes de viajar</h2><ul class="checklist-print">${printableRows(
               data.prep_tasks,
-              (task) => `<li><strong>${escapeHtml(task.category || "prep")}:</strong> ${escapeHtml(task.task || "")} <em>${escapeHtml(task.priority || "media")}</em></li>`,
+              (task) => `<li class="${guidePriorityClass(task.priority)}"><em>${escapeHtml(task.priority || "media")}</em><strong>${escapeHtml(task.category || "prep")}</strong><p>${escapeHtml(task.task || "")}</p></li>`,
             )}</ul></section>`
           : ""
       }
@@ -2352,7 +2510,7 @@ function buildPrintableGuideHtml() {
         asArray(data.risk_alerts).length
           ? `<section><h2>Riesgos a revisar</h2><ul class="checklist-print">${printableRows(
               data.risk_alerts,
-              (risk) => `<li><strong>${escapeHtml(risk.type || "riesgo")}:</strong> ${escapeHtml(risk.message || "")}</li>`,
+              (risk) => `<li class="${guideRiskClass(risk.type)}"><em>${escapeHtml(risk.type || "riesgo")}</em><p>${escapeHtml(risk.message || "")}</p></li>`,
             )}</ul></section>`
           : ""
       }
@@ -2376,14 +2534,28 @@ function buildPrintableGuideHtml() {
           p { margin: 0 0 8px; }
           small, em { color: #64748b; font-style: normal; }
           section { break-inside: avoid; margin: 0 0 22px; }
-          .meta-grid, .card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .meta-grid, .card-grid, .city-print-grid, .metric-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .metric-row { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+          .metric-row span { border-radius: 8px; padding: 10px; color: #0f4f46; background: #e7f4f1; }
+          .metric-row strong { display: block; color: #14211d; font-size: 20px; }
           .meta-grid span, article { border: 1px solid #dbe6e2; border-radius: 8px; padding: 11px; background: #fbfdfc; }
           .meta-grid strong { display: block; color: #0f4f46; font-size: 12px; text-transform: uppercase; }
+          .city-print-card { border-top: 4px solid #0f766e; }
+          .city-print-card span { display: inline-block; margin-bottom: 7px; color: #b94835; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+          .route-print-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+          .route-print-list li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; break-inside: avoid; }
+          .route-print-list i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: #fff; background: #0f766e; font-style: normal; font-weight: 900; }
+          .route-print-list div { border: 1px solid #dbe6e2; border-radius: 8px; padding: 9px; }
+          .route-print-list span { display: block; color: #0f4f46; font-weight: 800; }
           table { width: 100%; border-collapse: collapse; font-size: 13px; }
           th, td { border: 1px solid #dbe6e2; padding: 8px; text-align: left; vertical-align: top; }
           th { color: #0f4f46; background: #e7f4f1; }
           .checklist-print { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-          .checklist-print li { border: 1px solid #dbe6e2; border-radius: 8px; padding: 9px; }
+          .checklist-print li { border: 1px solid #dbe6e2; border-left: 5px solid #94a3b8; border-radius: 8px; padding: 9px; }
+          .checklist-print li.is-high { border-left-color: #b94835; }
+          .checklist-print li.is-medium { border-left-color: #d89b30; }
+          .checklist-print li.is-low { border-left-color: #0f766e; }
+          .checklist-print em { display: block; margin-bottom: 4px; color: #b94835; font-size: 11px; font-weight: 900; text-transform: uppercase; }
           pre { white-space: pre-wrap; font: inherit; }
           footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #dbe6e2; color: #64748b; font-size: 12px; }
           @page { margin: 14mm; }
@@ -2572,21 +2744,23 @@ function addDifyResultCard(data) {
   card.className = "agent-result-card";
   card.innerHTML = `
     <div class="agent-result-head">
-      <span>Resultado accionable</span>
+      <span>Plan accionable</span>
       <strong>${escapeHtml(data.summary || "Plan generado por viajaachina")}</strong>
     </div>
+    ${renderGuideMetricRow(data)}
     ${
       cities.length
-        ? `<div class="agent-card-section"><h4>Ciudades</h4><div class="agent-chip-grid">${cities
-            .map((city) => `<span>${escapeHtml(city.city_name || city.city_id || "Ciudad")}<small>${Number(city.days) || "?"} dias · ${Number(city.fit_score) || 0}/100</small></span>`)
+        ? `<div class="agent-card-section"><h4>Ciudades recomendadas</h4><div class="agent-chip-grid">${cities
+            .slice(0, 4)
+            .map((city) => `<span>${escapeHtml(agentCityName(city))}<small>${Number(city.days) || "?"} dias · ${Number(city.fit_score) || 0}/100</small></span>`)
             .join("")}</div></div>`
         : ""
     }
     ${
       places.length
-        ? `<div class="agent-card-section"><h4>Lugares</h4><ul>${places
+        ? `<div class="agent-card-section"><h4>Lugares clave</h4><ul>${places
             .slice(0, 5)
-            .map((place) => `<li><strong>${escapeHtml(place.place_name || "Lugar")}</strong><span>${escapeHtml(place.city_name || "")}</span></li>`)
+            .map((place) => `<li><strong>${escapeHtml(agentPlaceName(place))}</strong><span>${escapeHtml(place.city_name || "")}</span></li>`)
             .join("")}</ul></div>`
         : ""
     }
@@ -2613,13 +2787,7 @@ function addDifyResultCard(data) {
             .join("")}</ul></div>`
         : ""
     }
-    <div class="agent-action-row">
-      ${cities.length ? '<button type="button" data-save-agent-cities>Guardar ciudades</button>' : ""}
-      ${places.length ? '<button type="button" data-save-agent-places>Guardar lugares</button>' : ""}
-      ${segments.length || cities.length ? '<button type="button" data-save-agent-route>Guardar ruta</button>' : ""}
-      ${prepTasks.length ? '<button type="button" data-save-agent-prep>Añadir checklist</button>' : ""}
-      <button class="is-primary" type="button" data-save-agent-all>Guardar todo</button>
-    </div>
+    ${renderGuideActions(data, "agent")}
   `;
   card.__viajaachinaData = data;
   messages.appendChild(card);
@@ -2642,58 +2810,38 @@ function renderDifyItinerary(answer) {
     const prepTasks = asArray(data.prep_tasks);
     const risks = asArray(data.risk_alerts);
     itineraryContent.innerHTML = `
-      <article class="trip-card generated-guide">
-        <span class="module-pill">Guia IA</span>
-        <h3>${escapeHtml(data.summary || "Guia visual de viajaachina")}</h3>
-        <div class="agent-action-row">
-          ${cities.length ? '<button type="button" data-save-guide-cities>Guardar ciudades</button>' : ""}
-          ${places.length ? '<button type="button" data-save-guide-places>Guardar lugares</button>' : ""}
-          ${segments.length || cities.length ? '<button type="button" data-save-guide-route>Guardar ruta</button>' : ""}
-          ${prepTasks.length ? '<button type="button" data-save-guide-prep>Añadir checklist</button>' : ""}
-          <button class="is-primary" type="button" data-save-guide-all>Guardar todo</button>
+      <article class="trip-card generated-guide visual-guide-hero">
+        <div>
+          <span class="module-pill">Guia IA gratuita</span>
+          <h3>${escapeHtml(data.summary || "Guia visual de viajaachina")}</h3>
+          <p>Un resumen listo para guardar: ciudades, ruta, lugares, checklist y riesgos practicos.</p>
         </div>
+        ${renderGuideMetricRow(data)}
+        ${renderGuideActions(data, "guide")}
       </article>
       ${
         cities.length
-          ? `<article class="trip-card"><h3>Ciudades recomendadas</h3><div class="guide-city-grid">${cities
-              .map(
-                (city) => `
-                  <div>
-                    <strong>${escapeHtml(city.city_name || city.city_id || "Ciudad")}</strong>
-                    <span>${Number(city.days) || "?"} dias · ajuste ${Number(city.fit_score) || 0}/100</span>
-                    <p>${escapeHtml(city.reason || "")}</p>
-                  </div>
-                `,
-              )
-              .join("")}</div></article>`
+          ? `<article class="trip-card visual-guide-section"><div class="guide-section-head"><span>01</span><h3>Ciudades recomendadas</h3></div><div class="visual-city-grid">${renderVisualCityCards(cities)}</div></article>`
           : ""
       }
       ${
         segments.length
-          ? `<article class="trip-card"><h3>Ruta y transporte</h3><ol class="agent-route-mini">${segments
-              .map((segment) => `<li><strong>${escapeHtml(segment.from || "")} -> ${escapeHtml(segment.to || "")}</strong><span>${escapeHtml(segment.transport || "")} · ${escapeHtml(segment.time || "")} · ${escapeHtml(segment.price || "")}</span><p>${escapeHtml(segment.note || "")}</p></li>`)
-              .join("")}</ol></article>`
+          ? `<article class="trip-card visual-guide-section"><div class="guide-section-head"><span>02</span><h3>Ruta y transporte</h3></div><ol class="route-timeline">${renderRouteTimeline(segments)}</ol></article>`
           : ""
       }
       ${
         places.length
-          ? `<article class="trip-card"><h3>Lugares clave</h3><div class="guide-place-list">${places
-              .map((place) => `<div><strong>${escapeHtml(place.place_name || "Lugar")}</strong><span>${escapeHtml(place.city_name || "")}</span><p>${escapeHtml(place.why || place.booking_note || "")}</p></div>`)
-              .join("")}</div></article>`
+          ? `<article class="trip-card visual-guide-section"><div class="guide-section-head"><span>03</span><h3>Lugares clave</h3></div><div class="guide-place-tiles">${renderPlaceTiles(places)}</div></article>`
           : ""
       }
       ${
         prepTasks.length
-          ? `<article class="trip-card"><h3>Checklist antes de viajar</h3><ul class="checklist">${prepTasks
-              .map((task) => `<li><strong>${escapeHtml(task.category || "prep")}:</strong> ${escapeHtml(task.task || "")} <span>(${escapeHtml(task.priority || "media")})</span></li>`)
-              .join("")}</ul></article>`
+          ? `<article class="trip-card visual-guide-section"><div class="guide-section-head"><span>04</span><h3>Checklist antes de viajar</h3></div><ul class="prep-task-cards">${renderPrepTaskCards(prepTasks)}</ul></article>`
           : ""
       }
       ${
         risks.length
-          ? `<article class="trip-card"><h3>Riesgos a revisar</h3><ul class="checklist">${risks
-              .map((risk) => `<li><strong>${escapeHtml(risk.type || "riesgo")}:</strong> ${escapeHtml(risk.message || "")}</li>`)
-              .join("")}</ul></article>`
+          ? `<article class="trip-card visual-guide-section"><div class="guide-section-head"><span>05</span><h3>Riesgos a revisar</h3></div><ul class="risk-card-list">${renderRiskCards(risks)}</ul></article>`
           : ""
       }
     `;
