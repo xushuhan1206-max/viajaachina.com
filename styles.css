@@ -1610,6 +1610,122 @@ button {
   line-height: 1.55;
 }
 
+.agent-result-card {
+  align-self: stretch;
+  display: grid;
+  gap: 12px;
+  max-width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f4fbf9, #ffffff);
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+}
+
+.agent-result-head {
+  display: grid;
+  gap: 4px;
+}
+
+.agent-result-head span,
+.agent-card-section h4 {
+  margin: 0;
+  color: var(--red);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.agent-result-head strong {
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.agent-card-section {
+  display: grid;
+  gap: 8px;
+}
+
+.agent-card-section ul,
+.agent-route-mini {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-card-section li,
+.agent-route-mini li {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.agent-card-section li span,
+.agent-route-mini li span,
+.guide-city-grid span,
+.guide-place-list span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.agent-chip-grid,
+.guide-city-grid,
+.guide-place-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.agent-chip-grid span,
+.guide-city-grid div,
+.guide-place-list div {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.agent-chip-grid small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.agent-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-action-row button {
+  min-height: 34px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: var(--jade-dark);
+  background: #f3fbf9;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.agent-action-row button.is-primary {
+  color: #fff;
+  background: var(--jade);
+  border-color: var(--jade);
+}
+
+.generated-guide {
+  background: linear-gradient(180deg, #ffffff, #f6fbfa);
+}
+
 .module-pill {
   width: fit-content;
   border-radius: 999px;
@@ -2148,6 +2264,9 @@ button {
   .seo-keyword-grid,
   .faq-grid,
   .prep-guide-grid,
+  .agent-chip-grid,
+  .guide-city-grid,
+  .guide-place-list,
   .preference-list div,
   .prep-module-head,
   .account-form,

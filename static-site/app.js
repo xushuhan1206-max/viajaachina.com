@@ -641,6 +641,7 @@ const defaultAccount = {
   favoriteCityIds: [],
   favoritePlaces: [],
   savedRoutes: [],
+  savedPrepTasks: [],
   aiMemories: [],
   updatedAt: "",
 };
@@ -964,6 +965,7 @@ function loadAccount() {
     state.account = { ...defaultAccount, ...parsed };
     state.account.savedRoutes = state.account.savedRoutes || [];
     state.account.favoritePlaces = state.account.favoritePlaces || [];
+    state.account.savedPrepTasks = state.account.savedPrepTasks || [];
     state.account.aiMemories = state.account.aiMemories || [];
     state.difyConversationId = window.localStorage.getItem("viajaachina:dify_conversation_id") || "";
   } catch (error) {
@@ -977,6 +979,7 @@ function persistAccount(status = "Guardado local") {
   state.account.favoriteCityIds = [...state.favorites];
   state.account.favoritePlaces = state.account.favoritePlaces || [];
   state.account.savedRoutes = state.account.savedRoutes || [];
+  state.account.savedPrepTasks = state.account.savedPrepTasks || [];
   state.account.aiMemories = state.account.aiMemories || [];
   state.account.updatedAt = new Date().toISOString();
 
@@ -1501,6 +1504,7 @@ function renderTripHub() {
     ["memory", "Memoria IA"],
   ];
   const favoritePlaces = state.account.favoritePlaces || [];
+  const savedPrepTasks = state.account.savedPrepTasks || [];
   const routeCities = state.selectedCities.map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
   const favoriteCities = [...state.favorites].map((id) => destinations.find((city) => city.id === id)).filter(Boolean);
   const prep = prepRiskSummary();
@@ -1610,6 +1614,19 @@ function renderTripHub() {
             return `<article class="hub-item-card"><div><strong>${module.title}</strong><span>${status.label} · ${progress.completed}/${progress.total}</span></div></article>`;
           })
           .join("")}
+        ${
+          savedPrepTasks.length
+            ? `<div class="hub-section"><h3>Checklist añadido por IA</h3>${savedPrepTasks
+                .map(
+                  (task) => `
+                    <article class="hub-item-card">
+                      <div><strong>${task.category}</strong><span>${task.task} · ${task.priority}</span></div>
+                    </article>
+                  `,
+                )
+                .join("")}</div>`
+            : ""
+        }
       </div>
     `,
     memory: `
@@ -1919,7 +1936,271 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function slugify(value) {
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function parseDifyStructuredAnswer(answer) {
+  const raw = String(answer || "");
+  const match = raw.match(/<viajaachina_data>\s*([\s\S]*?)\s*<\/viajaachina_data>/i);
+  const text = raw.replace(/<viajaachina_data>[\s\S]*?<\/viajaachina_data>/gi, "").trim();
+  if (!match) return { text: text || raw, data: null };
+  try {
+    return { text, data: JSON.parse(match[1]) };
+  } catch (error) {
+    return { text: text || "Recibí una respuesta del agente, pero no pude leer los datos estructurados.", data: null };
+  }
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function findDestinationByAgentCity(city) {
+  const cityId = slugify(city?.city_id || city?.id || "");
+  const cityName = normalizeText(city?.city_name || city?.name || "");
+  return destinations.find((item) => item.id === cityId || normalizeText(item.name) === cityName);
+}
+
+function normalizeAgentPlace(place) {
+  const destination = findDestinationByAgentCity(place);
+  const name = String(place?.place_name || place?.name || "").trim();
+  if (!name) return null;
+  return {
+    id: `agent-${slugify(place?.city_id || destination?.id || place?.city_name || "china")}-${slugify(name)}`,
+    name,
+    cityId: destination?.id || slugify(place?.city_id || place?.city_name || "unknown") || "unknown",
+    cityName: destination?.name || place?.city_name || "Ciudad pendiente",
+    source: "dify",
+    note: place?.why || place?.booking_note || "",
+    aliases: [name],
+  };
+}
+
+function saveAgentCities(data) {
+  asArray(data?.recommended_cities).forEach((city) => {
+    const destination = findDestinationByAgentCity(city);
+    if (destination) state.favorites.add(destination.id);
+  });
+  persistAccount("Ciudades guardadas en Mi Viaje");
+  renderDestinations();
+  renderMap();
+  renderAccount(false);
+  renderTripHub();
+  showRegisterPrompt("top");
+}
+
+function saveAgentPlaces(data) {
+  asArray(data?.places_to_consider).forEach((place) => {
+    const normalizedPlace = normalizeAgentPlace(place);
+    if (normalizedPlace) addFavoritePlace(normalizedPlace, "dify");
+  });
+  renderTripHub();
+}
+
+function saveAgentRoute(data) {
+  const cityIds = asArray(data?.recommended_cities)
+    .map((city) => findDestinationByAgentCity(city)?.id)
+    .filter(Boolean);
+  const segmentCities = asArray(data?.route_segments)
+    .flatMap((segment) => [segment.from, segment.to])
+    .map((name) => destinations.find((city) => normalizeText(city.name) === normalizeText(name))?.id)
+    .filter(Boolean);
+  const orderedIds = [...new Set(cityIds.length ? cityIds : segmentCities)];
+  if (!orderedIds.length) return;
+  state.selectedCities = orderedIds.slice(0, 6);
+  state.account.savedRoutes = [
+    {
+      id: `agent-route-${Date.now()}`,
+      name: state.selectedCities.map((id) => destinations.find((city) => city.id === id)?.name).filter(Boolean).join(" -> "),
+      cityIds: [...state.selectedCities],
+      createdAt: new Date().toISOString(),
+      budget: state.answers.budget,
+      interests: state.answers.interests,
+      source: "dify",
+      segments: asArray(data?.route_segments),
+    },
+    ...(state.account.savedRoutes || []),
+  ].slice(0, 6);
+  persistAccount("Ruta guardada en Mi Viaje");
+  renderDestinations();
+  renderMap();
+  renderAccount(false);
+  renderTripHub();
+  showRegisterPrompt("top");
+}
+
+function saveAgentPrepTasks(data) {
+  const tasks = asArray(data?.prep_tasks)
+    .map((task) => ({
+      id: `prep-agent-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      category: task.category || "preparacion",
+      task: task.task || "",
+      priority: task.priority || "media",
+      createdAt: new Date().toISOString(),
+    }))
+    .filter((task) => task.task);
+  if (!tasks.length) return;
+  const existing = state.account.savedPrepTasks || [];
+  state.account.savedPrepTasks = [...tasks, ...existing].slice(0, 20);
+  persistAccount("Checklist añadido a Mi Viaje");
+  renderAccount(false);
+  renderTripHub();
+  showRegisterPrompt("top");
+}
+
+function saveAllAgentData(data) {
+  saveAgentCities(data);
+  saveAgentPlaces(data);
+  saveAgentRoute(data);
+  saveAgentPrepTasks(data);
+}
+
+function addDifyResultCard(data) {
+  if (!data || !messages) return;
+  const cities = asArray(data.recommended_cities);
+  const places = asArray(data.places_to_consider);
+  const segments = asArray(data.route_segments);
+  const prepTasks = asArray(data.prep_tasks);
+  const risks = asArray(data.risk_alerts);
+  if (![cities, places, segments, prepTasks, risks].some((items) => items.length)) return;
+
+  const card = document.createElement("div");
+  card.className = "agent-result-card";
+  card.innerHTML = `
+    <div class="agent-result-head">
+      <span>Resultado accionable</span>
+      <strong>${escapeHtml(data.summary || "Plan generado por viajaachina")}</strong>
+    </div>
+    ${
+      cities.length
+        ? `<div class="agent-card-section"><h4>Ciudades</h4><div class="agent-chip-grid">${cities
+            .map((city) => `<span>${escapeHtml(city.city_name || city.city_id || "Ciudad")}<small>${Number(city.days) || "?"} dias · ${Number(city.fit_score) || 0}/100</small></span>`)
+            .join("")}</div></div>`
+        : ""
+    }
+    ${
+      places.length
+        ? `<div class="agent-card-section"><h4>Lugares</h4><ul>${places
+            .slice(0, 5)
+            .map((place) => `<li><strong>${escapeHtml(place.place_name || "Lugar")}</strong><span>${escapeHtml(place.city_name || "")}</span></li>`)
+            .join("")}</ul></div>`
+        : ""
+    }
+    ${
+      segments.length
+        ? `<div class="agent-card-section"><h4>Ruta</h4><ol class="agent-route-mini">${segments
+            .map((segment) => `<li><strong>${escapeHtml(segment.from || "")} -> ${escapeHtml(segment.to || "")}</strong><span>${escapeHtml(segment.transport || "")} · ${escapeHtml(segment.time || "")} · ${escapeHtml(segment.price || "")}</span></li>`)
+            .join("")}</ol></div>`
+        : ""
+    }
+    ${
+      prepTasks.length
+        ? `<div class="agent-card-section"><h4>Checklist</h4><ul>${prepTasks
+            .slice(0, 5)
+            .map((task) => `<li><strong>${escapeHtml(task.category || "prep")}</strong><span>${escapeHtml(task.task || "")}</span></li>`)
+            .join("")}</ul></div>`
+        : ""
+    }
+    ${
+      risks.length
+        ? `<div class="agent-card-section"><h4>Riesgos</h4><ul>${risks
+            .slice(0, 4)
+            .map((risk) => `<li><strong>${escapeHtml(risk.type || "riesgo")}</strong><span>${escapeHtml(risk.message || "")}</span></li>`)
+            .join("")}</ul></div>`
+        : ""
+    }
+    <div class="agent-action-row">
+      ${cities.length ? '<button type="button" data-save-agent-cities>Guardar ciudades</button>' : ""}
+      ${places.length ? '<button type="button" data-save-agent-places>Guardar lugares</button>' : ""}
+      ${segments.length || cities.length ? '<button type="button" data-save-agent-route>Guardar ruta</button>' : ""}
+      ${prepTasks.length ? '<button type="button" data-save-agent-prep>Añadir checklist</button>' : ""}
+      <button class="is-primary" type="button" data-save-agent-all>Guardar todo</button>
+    </div>
+  `;
+  card.__viajaachinaData = data;
+  messages.appendChild(card);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function addAgentAnswer(answer) {
+  const parsed = parseDifyStructuredAnswer(answer);
+  if (parsed.text) addMessage("agent", parsed.text);
+  if (parsed.data) addDifyResultCard(parsed.data);
+}
+
 function renderDifyItinerary(answer) {
+  const parsed = parseDifyStructuredAnswer(answer);
+  if (parsed.data) {
+    const data = parsed.data;
+    const cities = asArray(data.recommended_cities);
+    const places = asArray(data.places_to_consider);
+    const segments = asArray(data.route_segments);
+    const prepTasks = asArray(data.prep_tasks);
+    const risks = asArray(data.risk_alerts);
+    itineraryContent.innerHTML = `
+      <article class="trip-card generated-guide">
+        <span class="module-pill">Guia IA</span>
+        <h3>${escapeHtml(data.summary || "Guia visual de viajaachina")}</h3>
+        <div class="agent-action-row">
+          ${cities.length ? '<button type="button" data-save-guide-cities>Guardar ciudades</button>' : ""}
+          ${places.length ? '<button type="button" data-save-guide-places>Guardar lugares</button>' : ""}
+          ${segments.length || cities.length ? '<button type="button" data-save-guide-route>Guardar ruta</button>' : ""}
+          ${prepTasks.length ? '<button type="button" data-save-guide-prep>Añadir checklist</button>' : ""}
+          <button class="is-primary" type="button" data-save-guide-all>Guardar todo</button>
+        </div>
+      </article>
+      ${
+        cities.length
+          ? `<article class="trip-card"><h3>Ciudades recomendadas</h3><div class="guide-city-grid">${cities
+              .map(
+                (city) => `
+                  <div>
+                    <strong>${escapeHtml(city.city_name || city.city_id || "Ciudad")}</strong>
+                    <span>${Number(city.days) || "?"} dias · ajuste ${Number(city.fit_score) || 0}/100</span>
+                    <p>${escapeHtml(city.reason || "")}</p>
+                  </div>
+                `,
+              )
+              .join("")}</div></article>`
+          : ""
+      }
+      ${
+        segments.length
+          ? `<article class="trip-card"><h3>Ruta y transporte</h3><ol class="agent-route-mini">${segments
+              .map((segment) => `<li><strong>${escapeHtml(segment.from || "")} -> ${escapeHtml(segment.to || "")}</strong><span>${escapeHtml(segment.transport || "")} · ${escapeHtml(segment.time || "")} · ${escapeHtml(segment.price || "")}</span><p>${escapeHtml(segment.note || "")}</p></li>`)
+              .join("")}</ol></article>`
+          : ""
+      }
+      ${
+        places.length
+          ? `<article class="trip-card"><h3>Lugares clave</h3><div class="guide-place-list">${places
+              .map((place) => `<div><strong>${escapeHtml(place.place_name || "Lugar")}</strong><span>${escapeHtml(place.city_name || "")}</span><p>${escapeHtml(place.why || place.booking_note || "")}</p></div>`)
+              .join("")}</div></article>`
+          : ""
+      }
+      ${
+        prepTasks.length
+          ? `<article class="trip-card"><h3>Checklist antes de viajar</h3><ul class="checklist">${prepTasks
+              .map((task) => `<li><strong>${escapeHtml(task.category || "prep")}:</strong> ${escapeHtml(task.task || "")} <span>(${escapeHtml(task.priority || "media")})</span></li>`)
+              .join("")}</ul></article>`
+          : ""
+      }
+      ${
+        risks.length
+          ? `<article class="trip-card"><h3>Riesgos a revisar</h3><ul class="checklist">${risks
+              .map((risk) => `<li><strong>${escapeHtml(risk.type || "riesgo")}:</strong> ${escapeHtml(risk.message || "")}</li>`)
+              .join("")}</ul></article>`
+          : ""
+      }
+    `;
+    itineraryContent.__viajaachinaData = data;
+    return;
+  }
+
   const blocks = answer
     .split(/\n{2,}/)
     .map((block) => block.trim())
@@ -2828,7 +3109,7 @@ async function requestDifyFollowup(text) {
   addMessage("agent", "Estoy consultando el agente de viajaachina...");
   try {
     const answer = await callDifyAgent(text, "chat");
-    if (answer) addMessage("agent", answer);
+    if (answer) addAgentAnswer(answer);
   } catch (error) {
     addMessage("agent", `Ahora mismo no pude conectar con Dify. Detalle tecnico: ${error.message}. Mantengo tu respuesta en el plan y puedes seguir usando el demo.`);
   } finally {
@@ -2964,6 +3245,7 @@ Incluye: ruta por dias, por que elegir cada ciudad, transporte entre ciudades, e
     const answer = await callDifyAgent(prompt, "itinerary");
     if (answer) {
       renderDifyItinerary(answer);
+      addAgentAnswer(answer);
       statusPill.textContent = "Generado";
       return;
     }
@@ -3115,6 +3397,40 @@ if (registerModal) {
   });
 }
 document.addEventListener("click", (event) => {
+  const agentCard = event.target.closest(".agent-result-card");
+  const guideData = event.target.closest("#itineraryContent") ? itineraryContent.__viajaachinaData : null;
+  const agentData = agentCard?.__viajaachinaData || guideData;
+
+  if (event.target.closest("[data-save-agent-cities], [data-save-guide-cities]") && agentData) {
+    saveAgentCities(agentData);
+    event.target.textContent = "Ciudades guardadas";
+    return;
+  }
+
+  if (event.target.closest("[data-save-agent-places], [data-save-guide-places]") && agentData) {
+    saveAgentPlaces(agentData);
+    event.target.textContent = "Lugares guardados";
+    return;
+  }
+
+  if (event.target.closest("[data-save-agent-route], [data-save-guide-route]") && agentData) {
+    saveAgentRoute(agentData);
+    event.target.textContent = "Ruta guardada";
+    return;
+  }
+
+  if (event.target.closest("[data-save-agent-prep], [data-save-guide-prep]") && agentData) {
+    saveAgentPrepTasks(agentData);
+    event.target.textContent = "Checklist añadido";
+    return;
+  }
+
+  if (event.target.closest("[data-save-agent-all], [data-save-guide-all]") && agentData) {
+    saveAllAgentData(agentData);
+    event.target.textContent = "Guardado en Mi Viaje";
+    return;
+  }
+
   const tripTab = event.target.closest("[data-trip-tab]");
   if (tripTab) {
     activeTripHubTab = tripTab.dataset.tripTab;
