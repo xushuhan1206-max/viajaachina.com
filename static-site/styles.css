@@ -716,6 +716,88 @@ button {
   pointer-events: none;
 }
 
+.leaflet-map-shell {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1a2332;
+}
+
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.city-map-label {
+  border: 0;
+  background: transparent;
+}
+
+.city-map-label span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.88);
+  white-space: nowrap;
+}
+
+.map-legend {
+  position: absolute;
+  z-index: 500;
+  left: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 4px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(0, 0, 0, 0.72);
+  font-size: 0.68rem;
+}
+
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-route {
+  border: 2px solid #fff176;
+  background: #ffb300;
+}
+
+.legend-favorite {
+  border: 1px solid #ffab91;
+  background: #ff7043;
+}
+
+.legend-default {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.map-approval-note {
+  position: absolute;
+  z-index: 500;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 6px;
+  padding: 4px 7px;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.58);
+  font-size: 0.62rem;
+}
+
 .geo-province {
   fill: rgba(255, 255, 255, 0.86);
   stroke: rgba(15, 118, 110, 0.38);

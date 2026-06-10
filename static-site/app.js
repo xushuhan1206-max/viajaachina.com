@@ -448,6 +448,10 @@ const MAP_VIEWBOX = { width: 720, height: 470, padding: 28 };
 let chinaGeojson = null;
 let geojsonLoading = null;
 let mapProjection = null;
+let leafletLoading = null;
+let leafletMap = null;
+let leafletGeoLayer = null;
+let leafletRouteLines = [];
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -1034,6 +1038,29 @@ function createSvgElement(tagName, attributes = {}) {
   return element;
 }
 
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletLoading) return leafletLoading;
+
+  leafletLoading = new Promise((resolve, reject) => {
+    if (!document.querySelector('link[href*="leaflet"]')) {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+      document.head.appendChild(css);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.async = true;
+    script.onload = () => resolve(window.L);
+    script.onerror = () => reject(new Error("Leaflet failed to load"));
+    document.head.appendChild(script);
+  });
+
+  return leafletLoading;
+}
+
 async function loadChinaGeojson() {
   if (chinaGeojson) return chinaGeojson;
   if (geojsonLoading) return geojsonLoading;
@@ -1163,14 +1190,126 @@ function renderLocalMap() {
   realMap.replaceChildren(wrapper);
 }
 
+async function renderLeafletMap() {
+  if (!realMap || leafletMap) return;
+
+  realMap.innerHTML = `
+    <div class="leaflet-map-shell">
+      <div class="leaflet-map" id="leafletMap"></div>
+      <div class="map-legend">
+        <span><i class="legend-route"></i>En ruta</span>
+        <span><i class="legend-favorite"></i>Favorita</span>
+        <span><i class="legend-default"></i>Disponible</span>
+      </div>
+      <div class="map-approval-note">审图号: GS(2023)2767</div>
+    </div>
+  `;
+
+  const L = await loadLeaflet();
+  const mapNode = document.querySelector("#leafletMap");
+  if (!mapNode) return;
+
+  leafletMap = L.map(mapNode, {
+    center: [35.5, 104.5],
+    zoom: 4,
+    minZoom: 3,
+    maxZoom: 7,
+    zoomControl: true,
+    attributionControl: false,
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+    subdomains: "abcd",
+  }).addTo(leafletMap);
+
+  const geojson = await loadChinaGeojson();
+  leafletGeoLayer = L.geoJSON(geojson, {
+    style: {
+      fillColor: "#2a4a6a",
+      fillOpacity: 0.42,
+      color: "#4a8abf",
+      weight: 1.4,
+    },
+  }).addTo(leafletMap);
+
+  markerLayers.clear();
+  destinations.forEach((city) => {
+    const marker = L.circleMarker([city.lat, city.lng], {
+      radius: 6,
+      fillColor: "rgba(255,255,255,0.4)",
+      fillOpacity: 0.8,
+      color: "rgba(255,255,255,0.65)",
+      weight: 1.5,
+    }).addTo(leafletMap);
+
+    L.marker([city.lat, city.lng], {
+      icon: L.divIcon({
+        className: "city-map-label",
+        html: `<span>${city.name}</span>`,
+        iconSize: [92, 18],
+        iconAnchor: [-10, 8],
+      }),
+      interactive: false,
+    }).addTo(leafletMap);
+
+    marker.on("click", () => toggleSelectedCity(city.id));
+    markerLayers.set(city.id, marker);
+  });
+}
+
 function updateGeojsonMarkers() {
   markerLayers.forEach((marker, cityId) => {
-    marker.classList.toggle("is-favorite", state.favorites.has(cityId));
-    marker.classList.toggle("is-selected", state.selectedCities.includes(cityId));
+    const isSelected = state.selectedCities.includes(cityId);
+    const isFavorite = state.favorites.has(cityId);
+
+    if (typeof marker.setStyle === "function") {
+      if (isSelected) {
+        marker.setStyle({ fillColor: "#ffb300", fillOpacity: 1, color: "#fff176", weight: 3 });
+        marker.setRadius(11);
+      } else if (isFavorite) {
+        marker.setStyle({ fillColor: "#ff7043", fillOpacity: 0.95, color: "#ffab91", weight: 2 });
+        marker.setRadius(8);
+      } else {
+        marker.setStyle({
+          fillColor: "rgba(255,255,255,0.4)",
+          fillOpacity: 0.8,
+          color: "rgba(255,255,255,0.65)",
+          weight: 1.5,
+        });
+        marker.setRadius(6);
+      }
+      return;
+    }
+
+    marker.classList.toggle("is-favorite", isFavorite);
+    marker.classList.toggle("is-selected", isSelected);
   });
 }
 
 function updateGeojsonRoute(selected) {
+  if (leafletMap && window.L) {
+    leafletRouteLines.forEach((line) => leafletMap.removeLayer(line));
+    leafletRouteLines = [];
+    for (let index = 0; index < selected.length - 1; index += 1) {
+      const from = selected[index];
+      const to = selected[index + 1];
+      const line = window.L.polyline(
+        [
+          [from.lat, from.lng],
+          [to.lat, to.lng],
+        ],
+        {
+          color: "#ffb300",
+          weight: 3,
+          dashArray: "10,6",
+          opacity: 0.9,
+        },
+      ).addTo(leafletMap);
+      leafletRouteLines.push(line);
+    }
+    return;
+  }
+
   const routeLine = document.querySelector("#geoRouteLine");
   if (!routeLine || !mapProjection) return;
 
@@ -1190,16 +1329,16 @@ function updateGeojsonRoute(selected) {
 }
 
 async function initRealMap() {
-  if (!realMap || chinaGeojson || geojsonLoading || markerLayers.size) return;
+  if (!realMap || leafletMap || markerLayers.size) return;
 
-  mapConfigState("Cargando mapa de China", "Cargando GeoJSON completo mediante el proxy de viajaachina.");
+  mapConfigState("Cargando mapa de China", "Cargando mapa interactivo con Leaflet y GeoJSON de China.");
 
   try {
-    const geojson = await loadChinaGeojson();
-    renderGeojsonMap(geojson);
+    await renderLeafletMap();
     renderMap();
   } catch (error) {
     geojsonLoading = null;
+    leafletLoading = null;
     renderLocalMap();
     renderMap();
   }
