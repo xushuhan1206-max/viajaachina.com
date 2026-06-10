@@ -796,11 +796,22 @@ button {
   margin-bottom: 16px;
 }
 
+.prep-guide-grid.is-compact {
+  margin-top: 10px;
+}
+
 .prep-guide-card {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
   background: #fbfdfc;
+}
+
+.prep-guide-card summary,
+.prep-deep-dive summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .prep-guide-card ul,
@@ -813,6 +824,110 @@ button {
 
 .prep-guide-card li + li {
   margin-top: 6px;
+}
+
+.prep-deep-dive {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.prep-deep-dive details,
+.prep-nested-card {
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  background: #f7fcfa;
+}
+
+.prep-nested-card {
+  display: grid;
+  gap: 10px;
+}
+
+.prep-nested-card h4,
+.prep-detail-grid h4 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.prep-nested-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.prep-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.prep-form-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--jade-dark);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.prep-form-grid input,
+.prep-form-grid select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
+.prep-result {
+  border-radius: 7px;
+  padding: 10px;
+  color: var(--jade-dark) !important;
+  background: #e7f4f1;
+  font-weight: 850;
+}
+
+.prep-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.prep-detail-grid article {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px;
+  background: #fff;
+}
+
+.prep-detail-grid ul,
+.prep-detail-grid ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.prep-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prep-link-row a {
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--jade-dark);
+  background: #e7f4f1;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
 }
 
 .prep-checklist {
@@ -2306,6 +2421,8 @@ button {
   .seo-keyword-grid,
   .faq-grid,
   .prep-guide-grid,
+  .prep-form-grid,
+  .prep-detail-grid,
   .agent-chip-grid,
   .guide-city-grid,
   .guide-place-list,

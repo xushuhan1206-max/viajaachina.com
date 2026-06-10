@@ -703,6 +703,160 @@ const prepModules = [
   },
 ];
 
+const visaPolicyGroups = {
+  thirtyDayLikely: [
+    "spain",
+    "espana",
+    "france",
+    "germany",
+    "italy",
+    "netherlands",
+    "belgium",
+    "switzerland",
+    "ireland",
+    "austria",
+    "hungary",
+    "argentina",
+    "brazil",
+    "chile",
+    "peru",
+    "uruguay",
+    "australia",
+    "new zealand",
+    "japan",
+    "south korea",
+    "singapore",
+    "malaysia",
+    "thailand",
+    "uae",
+    "qatar",
+  ],
+  transitLikely: ["mexico", "colombia", "united states", "usa", "canada", "uk", "united kingdom"],
+};
+
+const officialVisaLinks = [
+  { label: "National Immigration Administration", url: "https://en.nia.gov.cn/" },
+  { label: "China Consular Affairs", url: "https://cs.mfa.gov.cn/wgrlh/" },
+  { label: "Chinese Visa Application Service Center", url: "https://www.visaforchina.cn/" },
+];
+
+const appResourceLinks = {
+  payments: [
+    { label: "Alipay App Store", url: "https://apps.apple.com/app/alipay/id333206289" },
+    { label: "Alipay Google Play", url: "https://play.google.com/store/apps/details?id=com.eg.android.AlipayGphone" },
+    { label: "WeChat App Store", url: "https://apps.apple.com/app/wechat/id414478124" },
+    { label: "WeChat Google Play", url: "https://play.google.com/store/apps/details?id=com.tencent.mm" },
+  ],
+  apps: [
+    { label: "Trip.com", url: "https://www.trip.com/" },
+    { label: "Amap", url: "https://www.amap.com/" },
+    { label: "Baidu Maps", url: "https://map.baidu.com/" },
+    { label: "Pleco", url: "https://www.pleco.com/" },
+  ],
+  transport: [
+    { label: "Trip.com Trains", url: "https://www.trip.com/trains/china/" },
+    { label: "China Railway 12306", url: "https://www.12306.cn/en/index.html" },
+    { label: "DiDi", url: "https://www.didiglobal.com/" },
+  ],
+};
+
+const prepDeepDive = {
+  visa: {
+    title: "Confirmacion de entrada por nacionalidad",
+    steps: [
+      "Introduce nacionalidad, dias de estancia y si sales hacia un tercer pais o vuelves al pais de origen.",
+      "Revisa si encajas en exencion ordinaria, transito sin visa o si conviene tramitar visado.",
+      "Confirma la regla final en embajada/consulado chino antes de comprar vuelos no reembolsables.",
+    ],
+    microTasks: [
+      "Pasaporte valido y con paginas libres.",
+      "Vuelos de entrada/salida coherentes con la regla elegida.",
+      "Hoteles con direccion completa para formularios o controles.",
+      "Captura del enlace oficial aplicable a tu nacionalidad.",
+    ],
+    links: officialVisaLinks,
+  },
+  payments: {
+    title: "Pagos: configuracion realista",
+    steps: [
+      "Instala Alipay y vincula una tarjeta internacional antes de viajar.",
+      "Haz verificacion con pasaporte si la app lo pide.",
+      "Prepara WeChat Pay como respaldo si tu telefono y tarjeta lo permiten.",
+      "Lleva efectivo RMB para puestos pequenos, emergencias o fallos de red.",
+    ],
+    microTasks: [
+      "Avisar al banco del viaje a China.",
+      "Activar pagos internacionales y revisar limites diarios.",
+      "Guardar una tarjeta secundaria.",
+      "Probar que el QR de pago se abre antes de aterrizar.",
+    ],
+    links: appResourceLinks.payments,
+  },
+  apps: {
+    title: "Internet, mapas y traduccion",
+    steps: [
+      "Elige eSIM, roaming o SIM local antes de salir.",
+      "Instala un mapa local: Amap o Baidu Maps.",
+      "Guarda direcciones de hoteles, estaciones y atracciones en chino.",
+      "Prepara traductor offline y frases para taxi/restaurante.",
+    ],
+    microTasks: [
+      "Capturas offline de reservas y direcciones.",
+      "Nombres chinos de hotel y estaciones.",
+      "Contacto del hotel y numero de emergencia.",
+      "Plan de datos probado antes de salir del aeropuerto.",
+    ],
+    links: appResourceLinks.apps,
+  },
+  transport: {
+    title: "Trenes, metro y taxi",
+    steps: [
+      "Compra trenes con el nombre exactamente igual al pasaporte.",
+      "Confirma estacion exacta: muchas ciudades tienen varias estaciones.",
+      "Para taxi/Didi, guarda destino en chino y una captura del mapa.",
+      "En metro, evita horas punta si viajas con maleta grande.",
+    ],
+    microTasks: [
+      "Llegar 45-60 min antes a estaciones grandes.",
+      "Guardar numero de tren, asiento y puerta.",
+      "Tener direccion de hotel en chino para taxi.",
+      "Comparar tren vs avion contando traslados reales.",
+    ],
+    links: appResourceLinks.transport,
+  },
+  risks: {
+    title: "Riesgos y decisiones de respaldo",
+    steps: [
+      "Marca si tu viaje coincide con Semana Dorada u otros festivos.",
+      "Lista atracciones que requieren reserva anticipada.",
+      "Define una alternativa por ciudad por si llueve, se agota una entrada o falla el pago.",
+      "Guarda todo lo importante offline.",
+    ],
+    microTasks: [
+      "Plan B de atraccion por ciudad.",
+      "Plan B de pago.",
+      "Plan B de transporte.",
+      "Direcciones en chino y contacto del hotel.",
+    ],
+    links: [
+      { label: "Trip.com", url: "https://www.trip.com/" },
+      { label: "China Weather", url: "https://weather.cma.cn/" },
+    ],
+  },
+};
+
+const phraseRows = [
+  ["Taxi", "Por favor, lléveme a esta dirección.", "请带我去这个地址。", "Qing dai wo qu zhe ge di zhi."],
+  ["Taxi", "¿Puede usar el taxímetro?", "可以打表吗？", "Ke yi da biao ma?"],
+  ["Pago", "¿Puedo pagar con Alipay?", "可以用支付宝吗？", "Ke yi yong Zhi fu bao ma?"],
+  ["Pago", "Necesito pagar en efectivo.", "我想用现金支付。", "Wo xiang yong xian jin zhi fu."],
+  ["Restaurante", "No como picante.", "我不吃辣。", "Wo bu chi la."],
+  ["Restaurante", "Soy alérgico/a a esto.", "我对这个过敏。", "Wo dui zhe ge guo min."],
+  ["Estacion", "¿Dónde está la entrada de seguridad?", "安检入口在哪里？", "An jian ru kou zai na li?"],
+  ["Hotel", "Esta es mi reserva.", "这是我的预订。", "Zhe shi wo de yu ding."],
+  ["Emergencia", "Necesito ayuda.", "我需要帮助。", "Wo xu yao bang zhu."],
+];
+
 const defaultAccount = {
   id: "demo-user",
   name: "Viajero invitado",
@@ -1084,6 +1238,18 @@ function persistPrepState() {
   window.localStorage.setItem(PREP_STORAGE_KEY, JSON.stringify(state.prep));
 }
 
+function downloadPhraseTable() {
+  const header = "Situacion,Español,Chino,Pinyin";
+  const rows = phraseRows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","));
+  const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "viajaachina-frases-es-zh.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function prepItemKey(moduleId, index) {
   return `${moduleId}:${index}`;
 }
@@ -1141,6 +1307,94 @@ function prepModuleStatus(module) {
 function renderPrepGuideList(items, ordered = false) {
   const tag = ordered ? "ol" : "ul";
   return `<${tag}>${items.map((item) => `<li>${item}</li>`).join("")}</${tag}>`;
+}
+
+function visaCheckerResult() {
+  const nationality = normalizeText(state.prep.answers["visa:nationality"] || "");
+  const days = Number(state.prep.answers["visa:days"] || 0);
+  const routeType = state.prep.answers["visa:route_type"] || "";
+  if (!nationality && !days && !routeType) {
+    return "Completa nacionalidad, dias y tipo de ruta para obtener una orientacion inicial.";
+  }
+  if (visaPolicyGroups.thirtyDayLikely.some((country) => nationality.includes(country)) && days > 0 && days <= 30) {
+    return "Posible ruta: exencion ordinaria de hasta 30 dias, segun nacionalidad y vigencia de la politica. Confirma en fuente oficial antes de comprar vuelos.";
+  }
+  if (routeType === "transit" && days > 0 && days <= 10) {
+    return "Posible ruta: transito sin visa hasta 240 horas si cumples tercer pais/region, puerto habilitado y zona permitida. Confirma ciudades y salida con fuente oficial.";
+  }
+  if (visaPolicyGroups.transitLikely.some((country) => nationality.includes(country)) && routeType === "transit") {
+    return "Tu caso podria encajar mejor en transito sin visa que en exencion ordinaria. Revisa puerto de entrada, tercer pais/region y zona permitida.";
+  }
+  return "No hay suficiente base para asumir exencion. Revisa si necesitas visado turistico o si tu ruta encaja en una politica vigente.";
+}
+
+function renderVisaChecker() {
+  return `
+    <div class="prep-nested-card">
+      <div>
+        <h4>Chequeo previo de entrada</h4>
+        <p>No sustituye a una fuente oficial. Sirve para saber que camino revisar primero.</p>
+      </div>
+      <div class="prep-form-grid">
+        <label>
+          Nacionalidad
+          <input data-prep-field="visa:nationality" type="text" placeholder="Ej. España, México, Argentina" value="${escapeHtml(state.prep.answers["visa:nationality"] || "")}" />
+        </label>
+        <label>
+          Dias en China continental
+          <input data-prep-field="visa:days" type="number" min="1" max="90" placeholder="Ej. 10" value="${escapeHtml(state.prep.answers["visa:days"] || "")}" />
+        </label>
+        <label>
+          Tipo de ruta
+          <select data-prep-field="visa:route_type">
+            <option value="" ${!state.prep.answers["visa:route_type"] ? "selected" : ""}>No lo se</option>
+            <option value="round_trip" ${state.prep.answers["visa:route_type"] === "round_trip" ? "selected" : ""}>Entro y salgo al mismo pais</option>
+            <option value="transit" ${state.prep.answers["visa:route_type"] === "transit" ? "selected" : ""}>Tercer pais/region de salida</option>
+            <option value="multi_region" ${state.prep.answers["visa:route_type"] === "multi_region" ? "selected" : ""}>Incluye Hong Kong/Macao/Taiwan</option>
+          </select>
+        </label>
+      </div>
+      <p class="prep-result">${visaCheckerResult()}</p>
+    </div>
+  `;
+}
+
+function renderPrepLinks(links = []) {
+  if (!links.length) return "";
+  return `
+    <div class="prep-link-row">
+      ${links.map((link) => `<a href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join("")}
+    </div>
+  `;
+}
+
+function renderDeepDive(module) {
+  const deepDive = prepDeepDive[module.id];
+  if (!deepDive) return "";
+  return `
+    <div class="prep-deep-dive" id="prep-detail-${module.id}">
+      ${module.id === "visa" ? renderVisaChecker() : ""}
+      <details open>
+        <summary>${deepDive.title}</summary>
+        <div class="prep-detail-grid">
+          <article>
+            <h4>Pasos concretos</h4>
+            ${renderPrepGuideList(deepDive.steps, true)}
+          </article>
+          <article>
+            <h4>Microtareas</h4>
+            ${renderPrepGuideList(deepDive.microTasks)}
+          </article>
+        </div>
+        ${renderPrepLinks(deepDive.links)}
+      </details>
+      ${
+        module.id === "apps"
+          ? `<details><summary>Descargar frases utiles</summary><p>Guarda una tabla simple para taxi, pagos, restaurante, estacion y hotel.</p><button class="secondary-button" type="button" data-download-phrases>Descargar tabla ES-ZH</button></details>`
+          : ""
+      }
+    </div>
+  `;
 }
 
 function renderPrepCenter() {
@@ -1216,23 +1470,24 @@ function renderPrepCenter() {
         )
         .join("")}
     </div>
-    <div class="prep-guide-grid">
-      <article class="prep-guide-card">
-        <h4>Por que importa</h4>
+    ${renderDeepDive(active)}
+    <div class="prep-guide-grid is-compact">
+      <details class="prep-guide-card">
+        <summary>Por que importa</summary>
         ${renderPrepGuideList(active.guide.why)}
-      </article>
-      <article class="prep-guide-card">
-        <h4>Como hacerlo</h4>
+      </details>
+      <details class="prep-guide-card">
+        <summary>Como hacerlo</summary>
         ${renderPrepGuideList(active.guide.how, true)}
-      </article>
-      <article class="prep-guide-card">
-        <h4>Si falla</h4>
+      </details>
+      <details class="prep-guide-card">
+        <summary>Si falla</summary>
         ${renderPrepGuideList(active.guide.failures)}
-      </article>
-      <article class="prep-guide-card">
-        <h4>Plan B</h4>
+      </details>
+      <details class="prep-guide-card">
+        <summary>Plan B</summary>
         ${renderPrepGuideList(active.guide.backup)}
-      </article>
+      </details>
     </div>
     <div class="prep-checklist">
       <h4>Confirmacion final</h4>
@@ -1282,6 +1537,7 @@ function renderPrepCenter() {
       state.prep.activeModule = button.dataset.module;
       persistPrepState();
       renderPrepCenter();
+      document.querySelector("#prepModule")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
@@ -1300,6 +1556,16 @@ function renderPrepCenter() {
       renderPrepCenter();
     });
   });
+
+  prepModule.querySelectorAll("[data-prep-field]").forEach((field) => {
+    field.addEventListener("change", () => {
+      state.prep.answers[field.dataset.prepField] = field.value;
+      persistPrepState();
+      renderPrepCenter();
+    });
+  });
+
+  prepModule.querySelector("[data-download-phrases]")?.addEventListener("click", downloadPhraseTable);
 }
 
 function showRegisterPrompt(reason) {
