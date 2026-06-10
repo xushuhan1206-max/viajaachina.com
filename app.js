@@ -760,6 +760,150 @@ const appResourceLinks = {
   ],
 };
 
+const travelToolkits = [
+  {
+    id: "entry",
+    title: "Entrada, visado y frontera",
+    tag: "Antes de comprar vuelos",
+    useFor: "Confirmar si necesitas visado, exencion o transito sin visa.",
+    bestFor: "Todos los viajeros extranjeros.",
+    doFirst: "Revisa nacionalidad, dias reales en China continental, ciudad de entrada y pais/region de salida.",
+    risk: "No compres vuelos no reembolsables hasta confirmar la regla aplicable en fuente oficial.",
+    links: [
+      { label: "National Immigration Administration", url: "https://en.nia.gov.cn/" },
+      { label: "China Consular Affairs", url: "https://cs.mfa.gov.cn/wgrlh/" },
+      { label: "VisaForChina", url: "https://www.visaforchina.cn/" },
+    ],
+  },
+  {
+    id: "payments",
+    title: "Pagos: QR, tarjeta y efectivo",
+    tag: "Alta prioridad",
+    useFor: "Pagar restaurantes, metro, tiendas, taxis y atracciones.",
+    bestFor: "Viajeros sin cuenta bancaria china.",
+    doFirst: "Instala Alipay y WeChat, vincula dos tarjetas internacionales y lleva 300-800 RMB como plan B.",
+    risk: "Algunas tarjetas fallan por banco, limite o verificacion. Prueba una compra pequena al llegar.",
+    links: [
+      { label: "Alipay iOS", url: "https://apps.apple.com/app/alipay/id333206289" },
+      { label: "Alipay Android", url: "https://play.google.com/store/apps/details?id=com.eg.android.AlipayGphone" },
+      { label: "WeChat iOS", url: "https://apps.apple.com/app/wechat/id414478124" },
+      { label: "WeChat Android", url: "https://play.google.com/store/apps/details?id=com.tencent.mm" },
+    ],
+  },
+  {
+    id: "trains",
+    title: "Trenes y vuelos internos",
+    tag: "Rutas entre ciudades",
+    useFor: "Comprar tren de alta velocidad, comparar avion y guardar billetes.",
+    bestFor: "Rutas Beijing-Xi'an-Shanghai, Shanghai-Hangzhou, Chengdu-Chongqing.",
+    doFirst: "Compra con nombre igual al pasaporte, confirma estacion exacta y llega 45-60 minutos antes.",
+    risk: "Las ciudades grandes tienen varias estaciones; un error de estacion puede arruinar el tramo.",
+    links: [
+      { label: "Trip.com Trenes", url: "https://www.trip.com/trains/china/" },
+      { label: "China Railway 12306", url: "https://www.12306.cn/en/index.html" },
+      { label: "Trip.com Vuelos", url: "https://www.trip.com/flights/" },
+    ],
+  },
+  {
+    id: "local-transport",
+    title: "Taxi, Didi y metro",
+    tag: "Moverse en ciudad",
+    useFor: "Llegar a hotel, estaciones, barrios y atracciones dentro de una ciudad.",
+    bestFor: "Viajeros con maleta, familias o rutas nocturnas.",
+    doFirst: "Guarda destino en chino, captura de mapa, direccion del hotel y una forma de pago activa.",
+    risk: "Fuera de zonas turisticas, el conductor puede no entender direcciones en español o ingles.",
+    links: [
+      { label: "DiDi Global", url: "https://www.didiglobal.com/" },
+      { label: "Amap", url: "https://www.amap.com/" },
+      { label: "Baidu Maps", url: "https://map.baidu.com/" },
+    ],
+  },
+  {
+    id: "maps",
+    title: "Mapas y navegación",
+    tag: "No dependas de uno solo",
+    useFor: "Ubicar hoteles, estaciones, atracciones, restaurantes y rutas a pie.",
+    bestFor: "Todos, especialmente fuera de Shanghai/Beijing centro.",
+    doFirst: "Guarda nombres chinos, capturas offline y puntos cerca de metro.",
+    risk: "Google Maps puede ser poco practico en China continental; prepara alternativa local.",
+    links: [
+      { label: "Amap", url: "https://www.amap.com/" },
+      { label: "Baidu Maps", url: "https://map.baidu.com/" },
+      { label: "Apple Maps", url: "https://maps.apple.com/" },
+    ],
+  },
+  {
+    id: "translation",
+    title: "Traducción y frases",
+    tag: "Idioma",
+    useFor: "Restaurantes, taxi, hotel, compras, alergias y emergencias.",
+    bestFor: "Viajeros que no hablan chino.",
+    doFirst: "Descarga traductor offline y una tabla de frases para taxi, pagos, tren, hotel y restaurante.",
+    risk: "La traduccion por voz puede fallar con ruido; tener texto chino guardado ayuda mucho.",
+    links: [
+      { label: "Pleco", url: "https://www.pleco.com/" },
+      { label: "Google Translate", url: "https://translate.google.com/" },
+      { label: "Microsoft Translator", url: "https://translator.microsoft.com/" },
+    ],
+  },
+  {
+    id: "tickets",
+    title: "Entradas y reservas",
+    tag: "Atracciones populares",
+    useFor: "Reservar Ciudad Prohibida, Terracota, museos, miradores y tours.",
+    bestFor: "Viajes en festivos, temporada alta o primera visita.",
+    doFirst: "Lista atracciones por ciudad, fecha de apertura de venta, pasaporte requerido y alternativa si se agota.",
+    risk: "Algunas atracciones no venden entrada el mismo dia o exigen nombre/pasaporte.",
+    links: [
+      { label: "Trip.com Atracciones", url: "https://www.trip.com/things-to-do/" },
+      { label: "Klook China", url: "https://www.klook.com/" },
+      { label: "GetYourGuide China", url: "https://www.getyourguide.com/china-l169032/" },
+    ],
+  },
+  {
+    id: "hotels",
+    title: "Hoteles y direcciones",
+    tag: "Base de viaje",
+    useFor: "Reservar alojamiento y guardar direcciones utiles en chino.",
+    bestFor: "Primer viaje, llegada tarde o rutas con tren.",
+    doFirst: "Reserva cerca de metro/estacion, guarda nombre chino, telefono y direccion completa.",
+    risk: "Un hotel lejos del metro aumenta dependencia de taxi y complica el primer dia.",
+    links: [
+      { label: "Trip.com Hoteles", url: "https://www.trip.com/hotels/" },
+      { label: "Booking.com China", url: "https://www.booking.com/country/cn.html" },
+      { label: "Agoda China", url: "https://www.agoda.com/country/china.html" },
+    ],
+  },
+  {
+    id: "internet",
+    title: "Internet, eSIM y respaldo",
+    tag: "Conectividad",
+    useFor: "Usar mapas, pagos, traduccion, reservas y mensajeria.",
+    bestFor: "Todos los viajeros.",
+    doFirst: "Decide eSIM, roaming o SIM local antes de salir y guarda reservas offline.",
+    risk: "Sin datos moviles, QR de pago, taxi y mapas pueden fallar en el peor momento.",
+    links: [
+      { label: "Trip.com eSIM", url: "https://www.trip.com/esim/" },
+      { label: "Airalo China", url: "https://www.airalo.com/china-esim" },
+      { label: "Nomad China", url: "https://www.getnomad.app/china-eSIM" },
+    ],
+  },
+  {
+    id: "weather-safety",
+    title: "Clima, festivos y seguridad",
+    tag: "Riesgos prácticos",
+    useFor: "Evitar cierres, lluvias, calor extremo, multitudes y cambios de horario.",
+    bestFor: "Viajes en verano, invierno, festivos o ciudades de naturaleza.",
+    doFirst: "Revisa clima, festivos chinos, horario de atracciones y contacto del hotel.",
+    risk: "Semana Dorada y festivos pueden disparar precios y agotar trenes/entradas.",
+    links: [
+      { label: "China Weather", url: "https://weather.cma.cn/" },
+      { label: "China Daily Holidays", url: "https://www.chinadaily.com.cn/" },
+      { label: "Emergencias para viajeros", url: "https://www.fmprc.gov.cn/eng/" },
+    ],
+  },
+];
+
 const prepDeepDive = {
   visa: {
     title: "Confirmacion de entrada por nacionalidad",
@@ -1101,6 +1245,7 @@ const state = {
   favorites: new Set(),
   selectedCities: [],
   difyConversationId: "",
+  awaitingDifyFollowup: false,
   prep: {
     activeModule: "visa",
     scenarioIds: [],
@@ -1173,6 +1318,7 @@ const prepTabs = document.querySelector("#prepTabs");
 const prepModule = document.querySelector("#prepModule");
 const prepProgressText = document.querySelector("#prepProgressText");
 const prepProgressBar = document.querySelector("#prepProgressBar");
+const toolkitGrid = document.querySelector("#toolkitGrid");
 
 const CHINA_GEOJSON_URL = "/api/china-map";
 const MAP_VIEWBOX = { width: 720, height: 470, padding: 28 };
@@ -1366,6 +1512,49 @@ function renderPrepLinks(links = []) {
       ${links.map((link) => `<a href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join("")}
     </div>
   `;
+}
+
+function renderToolkitResources() {
+  if (!toolkitGrid) return;
+  toolkitGrid.innerHTML = travelToolkits
+    .map(
+      (tool) => `
+        <article class="toolkit-card" id="tool-${tool.id}">
+          <div class="toolkit-card-head">
+            <span>${escapeHtml(tool.tag)}</span>
+            <h3>${escapeHtml(tool.title)}</h3>
+          </div>
+          <dl>
+            <div>
+              <dt>Para qué sirve</dt>
+              <dd>${escapeHtml(tool.useFor)}</dd>
+            </div>
+            <div>
+              <dt>Haz primero</dt>
+              <dd>${escapeHtml(tool.doFirst)}</dd>
+            </div>
+            <div>
+              <dt>Riesgo</dt>
+              <dd>${escapeHtml(tool.risk)}</dd>
+            </div>
+          </dl>
+          <div class="toolkit-links">
+            ${tool.links.map((link) => `<a href="${link.url}" target="_blank" rel="noreferrer">${escapeHtml(link.label)}</a>`).join("")}
+          </div>
+          <button class="ai-context-button is-wide" type="button" data-toolkit-ai="${tool.id}">Preguntar a IA sobre esto</button>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function askAiAboutToolkit(toolId) {
+  const tool = travelToolkits.find((item) => item.id === toolId);
+  if (!tool) return;
+  const prompt = `Ayudame con este tema practico para viajar a China: ${tool.title}. Contexto: ${tool.useFor}. Primer paso recomendado: ${tool.doFirst}. Riesgo principal: ${tool.risk}. Dame una respuesta breve, accionable y adaptada a mi viaje.`;
+  addMessage("user", prompt);
+  focusChat();
+  requestDifyFollowup(prompt);
 }
 
 function renderDeepDive(module) {
@@ -2618,13 +2807,27 @@ function slugify(value) {
 function parseDifyStructuredAnswer(answer) {
   const raw = String(answer || "");
   const match = raw.match(/<viajaachina_data>\s*([\s\S]*?)\s*<\/viajaachina_data>/i);
-  const text = raw.replace(/<viajaachina_data>[\s\S]*?<\/viajaachina_data>/gi, "").trim();
+  const text = cleanDifyVisibleText(raw.replace(/<viajaachina_data>[\s\S]*?<\/viajaachina_data>/gi, ""));
   if (!match) return { text: text || raw, data: null };
   try {
     return { text, data: JSON.parse(match[1]) };
   } catch (error) {
     return { text: text || "Recibí una respuesta del agente, pero no pude leer los datos estructurados.", data: null };
   }
+}
+
+function cleanDifyVisibleText(value) {
+  return String(value || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<\/?think>/gi, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function asArray(value) {
@@ -2798,6 +3001,12 @@ function addAgentAnswer(answer) {
   const parsed = parseDifyStructuredAnswer(answer);
   if (parsed.text) addMessage("agent", parsed.text);
   if (parsed.data) addDifyResultCard(parsed.data);
+  if (parsed.data) {
+    renderDifyFollowupReplies(parsed.data);
+  } else {
+    state.awaitingDifyFollowup = false;
+    quickReplies.innerHTML = "";
+  }
 }
 
 function renderDifyItinerary(answer) {
@@ -2921,6 +3130,56 @@ function renderQuickReplies() {
     button.addEventListener("click", () => handleAnswer(reply, { askAgent: false }));
     quickReplies.appendChild(button);
   });
+}
+
+function renderDifyFollowupReplies(data) {
+  const questions = asArray(data?.follow_up_questions).filter(Boolean).slice(0, 3);
+  state.awaitingDifyFollowup = Boolean(questions.length);
+  quickReplies.innerHTML = "";
+  if (!questions.length) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "followup-card-grid";
+  questions.forEach((question) => {
+    const card = document.createElement("article");
+    card.className = "followup-card";
+    const options = followupReplyOptions(question);
+    card.innerHTML = `
+      <strong>${escapeHtml(question)}</strong>
+      <div>
+        ${options.map((option) => `<button type="button" data-followup-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}
+        <button class="is-soft" type="button" data-followup-custom="${escapeHtml(question)}">Responder libremente</button>
+      </div>
+    `;
+    wrapper.appendChild(card);
+  });
+  quickReplies.appendChild(wrapper);
+}
+
+function followupReplyOptions(question) {
+  const normalized = normalizeText(question);
+  if (normalized.includes("cuantos") || normalized.includes("dias") || normalized.includes("duracion")) {
+    return ["5-7 dias", "8-10 dias", "12-15 dias"];
+  }
+  if (normalized.includes("interesa") || normalized.includes("experiencia") || normalized.includes("gust")) {
+    return ["Historia y cultura", "Comida local", "Naturaleza", "Ciudades modernas"];
+  }
+  if (normalized.includes("ciudad") || normalized.includes("ruta") || normalized.includes("entrada") || normalized.includes("salida")) {
+    return ["Clasica: Beijing + Xi'an + Shanghai", "Moderna: Shanghai + Hangzhou", "Naturaleza: Guilin + Zhangjiajie"];
+  }
+  if (normalized.includes("presupuesto") || normalized.includes("comodidad")) {
+    return ["Economico", "Equilibrado", "Comodo"];
+  }
+  if (normalized.includes("nacionalidad") || normalized.includes("pasaporte")) {
+    return ["España", "México", "Argentina"];
+  }
+  if (normalized.includes("mes") || normalized.includes("fecha") || normalized.includes("temporada")) {
+    return ["Abril-mayo", "Septiembre-octubre", "Diciembre-enero"];
+  }
+  if (normalized.includes("viajas") || normalized.includes("viajeros") || normalized.includes("solo")) {
+    return ["Solo", "En pareja", "En familia"];
+  }
+  return ["Quiero una ruta practica", "Necesito ayuda con pagos", "No se que elegir"];
 }
 
 function renderPreferences() {
@@ -3837,14 +4096,15 @@ function handleAnswer(text, options = {}) {
   const shouldAskAgent = askAgent && cleanText.length > 24;
   const changedByHints = applyTripHints(cleanText);
 
+  if (askAgent && (state.awaitingDifyFollowup || shouldAskAgent)) {
+    state.awaitingDifyFollowup = false;
+    setIntent(cleanText, { silent: true });
+    requestDifyFollowup(cleanText);
+    return;
+  }
+
   if (state.step < 0) {
-    if (shouldAskAgent && isCompleteAgentQuestion(cleanText)) {
-      setIntent(cleanText, { silent: true });
-      requestDifyFollowup(cleanText);
-      return;
-    }
     setIntent(cleanText);
-    if (shouldAskAgent) requestDifyFollowup(cleanText);
     return;
   }
 
@@ -3857,12 +4117,7 @@ function handleAnswer(text, options = {}) {
       renderPreferences();
     }
     advancePastAnswered();
-    if (shouldAskAgent && isCompleteAgentQuestion(cleanText)) {
-      requestDifyFollowup(cleanText);
-    } else {
-      window.setTimeout(askNextQuestion, 260);
-      if (shouldAskAgent) requestDifyFollowup(cleanText);
-    }
+    window.setTimeout(askNextQuestion, 260);
   } else {
     requestDifyFollowup(cleanText);
   }
@@ -4066,6 +4321,7 @@ function resetFlow() {
   state.step = -1;
   state.intentId = "";
   state.selectedCities = [];
+  state.awaitingDifyFollowup = false;
   Object.keys(state.answers).forEach((key) => {
     state.answers[key] = "Pendiente";
   });
@@ -4090,6 +4346,22 @@ chatForm.addEventListener("submit", (event) => {
   const text = chatInput.value;
   chatInput.value = "";
   handleAnswer(text);
+});
+
+quickReplies.addEventListener("click", (event) => {
+  const answerButton = event.target.closest("[data-followup-answer]");
+  if (answerButton) {
+    quickReplies.innerHTML = "";
+    state.awaitingDifyFollowup = false;
+    handleAnswer(answerButton.dataset.followupAnswer, { askAgent: true });
+    return;
+  }
+
+  const customButton = event.target.closest("[data-followup-custom]");
+  if (customButton) {
+    chatInput.placeholder = customButton.dataset.followupCustom;
+    chatInput.focus();
+  }
 });
 
 generateButton.addEventListener("click", generateItinerary);
@@ -4223,6 +4495,12 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const toolkitAiButton = event.target.closest("[data-toolkit-ai]");
+  if (toolkitAiButton) {
+    askAiAboutToolkit(toolkitAiButton.dataset.toolkitAi);
+    return;
+  }
+
   const loadRouteButton = event.target.closest("[data-load-route]");
   if (loadRouteButton) {
     loadSavedRoute(loadRouteButton.dataset.loadRoute);
@@ -4243,4 +4521,5 @@ document.addEventListener("click", (event) => {
 loadAccount();
 loadPrepState();
 renderPrepCenter();
+renderToolkitResources();
 resetFlow();
