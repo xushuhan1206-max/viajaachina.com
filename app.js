@@ -1306,6 +1306,7 @@ const tripHubCountTop = document.querySelector("#tripHubCountTop");
 const tripHubCountFab = document.querySelector("#tripHubCountFab");
 const openLoginTop = document.querySelector("#openLoginTop");
 const openRegisterTop = document.querySelector("#openRegisterTop");
+const signOutTop = document.querySelector("#signOutTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
 const registerToast = document.querySelector("#registerToast");
@@ -1982,6 +1983,87 @@ function deleteSavedRoute(routeId) {
   renderTripHub();
 }
 
+function authSaveHint() {
+  if (isSignedIn()) {
+    return `
+      <div class="hub-auth-cta is-signed-in">
+        <strong>Cuenta conectada</strong>
+        <p>Tus favoritos, rutas, checklist y memoria se sincronizan automaticamente.</p>
+      </div>
+    `;
+  }
+  return `
+    <div class="hub-auth-cta">
+      <strong>Guarda este viaje gratis</strong>
+      <p>Inicia sesion o crea una cuenta para conservar ciudades, lugares, rutas, checklist y memoria personal entre sesiones.</p>
+      <div class="hub-item-actions">
+        <button type="button" data-open-auth="signin">Iniciar sesion</button>
+        <button type="button" data-open-auth="signup">Registrarse gratis</button>
+      </div>
+    </div>
+  `;
+}
+
+function clearFavoriteCities() {
+  if (!state.favorites.size) return;
+  if (!window.confirm("¿Eliminar todas las ciudades guardadas de Mi Viaje?")) return;
+  state.favorites.clear();
+  state.account.favoriteCityIds = [];
+  persistAccount("Ciudades eliminadas");
+  renderDestinations();
+  renderMap();
+  renderAccount(false);
+  renderTripHub();
+}
+
+function clearFavoritePlaces() {
+  if (!(state.account.favoritePlaces || []).length) return;
+  if (!window.confirm("¿Eliminar todos los lugares guardados de Mi Viaje?")) return;
+  state.account.favoritePlaces = [];
+  persistAccount("Lugares eliminados");
+  renderAccount(false);
+  renderTripHub();
+}
+
+function clearSavedRoutes() {
+  if (!(state.account.savedRoutes || []).length) return;
+  if (!window.confirm("¿Eliminar todas las rutas guardadas de Mi Viaje?")) return;
+  state.account.savedRoutes = [];
+  persistAccount("Rutas eliminadas");
+  renderAccount(false);
+  renderTripHub();
+}
+
+function clearSavedPrepTasks() {
+  if (!(state.account.savedPrepTasks || []).length) return;
+  if (!window.confirm("¿Eliminar el checklist añadido por IA?")) return;
+  state.account.savedPrepTasks = [];
+  persistAccount("Checklist IA eliminado");
+  renderAccount(false);
+  renderTripHub();
+}
+
+function clearAccountMemory() {
+  const hasMemory = state.account.memory.trim() || (state.account.aiMemories || []).length;
+  if (!hasMemory) return;
+  if (!window.confirm("¿Eliminar la memoria personal del agente?")) return;
+  state.account.memory = "";
+  state.account.aiMemories = [];
+  if (profileMemory) profileMemory.value = "";
+  persistAccount("Memoria eliminada");
+  renderAccount(false);
+  renderTripHub();
+}
+
+function removeAiMemory(memoryIndex) {
+  const index = Number(memoryIndex);
+  if (!Number.isInteger(index)) return;
+  state.account.aiMemories = (state.account.aiMemories || []).filter((_, itemIndex) => itemIndex !== index);
+  persistAccount("Memoria eliminada");
+  renderAccount(false);
+  renderTripHub();
+}
+
 function renderAccount(syncForm = true) {
   if (!accountForm) return;
 
@@ -2001,10 +2083,13 @@ function renderAccount(syncForm = true) {
   if (accountAuthButton) accountAuthButton.textContent = isSignedIn() ? "Cuenta conectada" : "Crear cuenta gratis";
   if (accountAuthButton) accountAuthButton.disabled = isSignedIn();
   if (signOutButton) signOutButton.style.display = isSignedIn() ? "inline-flex" : "none";
+  if (signOutTop) signOutTop.style.display = isSignedIn() ? "inline-flex" : "none";
+  if (openLoginTop) openLoginTop.style.display = isSignedIn() ? "none" : "inline-flex";
+  if (openRegisterTop) openRegisterTop.style.display = isSignedIn() ? "none" : "inline-flex";
   if (accountSyncStatus && isSignedIn() && accountSyncStatus.textContent === "Guardado local") {
     accountSyncStatus.textContent = "Guardado en este dispositivo";
   }
-  const memoryCount = state.account.memory.trim() ? 1 : 0;
+  const memoryCount = (state.account.memory.trim() ? 1 : 0) + (state.account.aiMemories || []).length;
   accountStats.innerHTML = `
     <span>Favoritos: ${state.favorites.size}</span>
     <span>Lugares: ${(state.account.favoritePlaces || []).length}</span>
@@ -2108,6 +2193,7 @@ function renderTripHub() {
 
   const sections = {
     summary: `
+      ${authSaveHint()}
       <div class="hub-summary-grid">
         <span><strong>${state.answers.duration}</strong> Duracion</span>
         <span><strong>${state.answers.budget}</strong> Presupuesto</span>
@@ -2122,6 +2208,7 @@ function renderTripHub() {
       </div>
     `,
     cities: `
+      ${authSaveHint()}
       <div class="hub-section">
         <h3>Ciudades guardadas</h3>
         ${
@@ -2142,12 +2229,23 @@ function renderTripHub() {
                 .join("")
             : '<p class="muted-note">Marca ciudades con la estrella para guardarlas aqui.</p>'
         }
+        ${
+          favoriteCities.length
+            ? '<div class="hub-item-actions"><button type="button" data-clear-cities>Limpiar ciudades</button></div>'
+            : ""
+        }
       </div>
     `,
     places: `
+      ${authSaveHint()}
       <div class="hub-section">
         <h3>Lugares guardados</h3>
         ${renderPlaceCards(favoritePlaces)}
+        ${
+          favoritePlaces.length
+            ? '<div class="hub-item-actions"><button type="button" data-clear-places>Limpiar lugares</button></div>'
+            : ""
+        }
       </div>
       <form class="manual-place-form" id="manualPlaceForm">
         <h3>Agregar lugar manualmente</h3>
@@ -2161,6 +2259,7 @@ function renderTripHub() {
       </form>
     `,
     route: `
+      ${authSaveHint()}
       <div class="hub-section">
         <h3>Ruta actual</h3>
         ${routeCities.length ? `<ol class="hub-route-list">${routeCities.map((city) => `<li>${city.name}</li>`).join("")}</ol>` : '<p class="muted-note">Selecciona ciudades para construir una ruta.</p>'}
@@ -2185,9 +2284,15 @@ function renderTripHub() {
                 .join("")
             : '<p class="muted-note">Guarda tu primera ruta desde el mapa.</p>'
         }
+        ${
+          (state.account.savedRoutes || []).length
+            ? '<div class="hub-item-actions"><button type="button" data-clear-routes>Limpiar rutas</button></div>'
+            : ""
+        }
       </div>
     `,
     prep: `
+      ${authSaveHint()}
       <div class="hub-section">
         <h3>Preparacion</h3>
         <div class="hub-summary-grid">
@@ -2211,16 +2316,37 @@ function renderTripHub() {
                     </article>
                   `,
                 )
-                .join("")}</div>`
+                .join("")}<div class="hub-item-actions"><button type="button" data-clear-prep>Limpiar checklist IA</button></div></div>`
             : ""
         }
       </div>
     `,
     memory: `
+      ${authSaveHint()}
       <div class="hub-section">
         <h3>Memoria del agente</h3>
-        <p>${state.account.memory}</p>
-        <p class="muted-note">Pendiente: conectar esta memoria con Supabase y Dify memory.</p>
+        <p>${state.account.memory || "Aun no hay memoria personal guardada."}</p>
+        ${
+          (state.account.aiMemories || []).length
+            ? (state.account.aiMemories || [])
+                .map(
+                  (memory, index) => `
+                    <article class="hub-item-card">
+                      <div><strong>${memory.type || "Memoria"}</strong><span>${memory.content}</span></div>
+                      <div class="hub-item-actions">
+                        <button type="button" data-remove-ai-memory="${index}">Eliminar</button>
+                      </div>
+                    </article>
+                  `,
+                )
+                .join("")
+            : ""
+        }
+        ${
+          state.account.memory.trim() || (state.account.aiMemories || []).length
+            ? '<div class="hub-item-actions"><button type="button" data-clear-memory>Limpiar memoria</button></div>'
+            : ""
+        }
       </div>
       <div class="hub-section">
         <h3>Preferencias</h3>
@@ -2449,7 +2575,14 @@ async function submitAuth(action) {
   }
 }
 
-function signOut() {
+async function signOut() {
+  if (isSignedIn()) {
+    const shouldSave = window.confirm("¿Guardar tus favoritos, rutas, checklist y memoria en tu cuenta antes de cerrar sesion?");
+    if (shouldSave) {
+      if (accountSyncStatus) accountSyncStatus.textContent = "Guardando en tu cuenta...";
+      await saveAccountToCloud();
+    }
+  }
   state.session = null;
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
   if (accountSyncStatus) accountSyncStatus.textContent = "Guardado local";
@@ -4602,6 +4735,7 @@ if (accountForm) {
 if (applyProfileButton) applyProfileButton.addEventListener("click", applyAccountToTrip);
 if (accountAuthButton) accountAuthButton.addEventListener("click", () => openRegisterInfo("top"));
 if (signOutButton) signOutButton.addEventListener("click", signOut);
+if (signOutTop) signOutTop.addEventListener("click", signOut);
 if (authForm) {
   authForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -4642,6 +4776,18 @@ if (registerModal) {
   });
 }
 document.addEventListener("click", (event) => {
+  const authTrigger = event.target.closest("[data-open-auth]");
+  if (authTrigger) {
+    openRegisterInfo("top", authTrigger.dataset.openAuth === "signin" ? "signin" : "signup");
+    return;
+  }
+
+  const footerTripButton = event.target.closest("[data-footer-trip]");
+  if (footerTripButton) {
+    openTripHub("summary");
+    return;
+  }
+
   const agentCard = event.target.closest(".agent-result-card");
   const guideData = event.target.closest("#itineraryContent") ? itineraryContent.__viajaachinaData : null;
   const agentData = agentCard?.__viajaachinaData || guideData;
@@ -4680,6 +4826,37 @@ document.addEventListener("click", (event) => {
   if (tripTab) {
     activeTripHubTab = tripTab.dataset.tripTab;
     renderTripHub();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-cities]")) {
+    clearFavoriteCities();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-places]")) {
+    clearFavoritePlaces();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-routes]")) {
+    clearSavedRoutes();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-prep]")) {
+    clearSavedPrepTasks();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-memory]")) {
+    clearAccountMemory();
+    return;
+  }
+
+  const removeAiMemoryButton = event.target.closest("[data-remove-ai-memory]");
+  if (removeAiMemoryButton) {
+    removeAiMemory(removeAiMemoryButton.dataset.removeAiMemory);
     return;
   }
 

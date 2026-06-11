@@ -13,6 +13,7 @@
       content="viajar a China, viaje a China, itinerario China, China en 10 dias, planificador China gratis, Alipay China, WeChat Pay China, tren bala China, visa China, turismo China en español"
     />
     <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f766e" />
     <link rel="canonical" href="https://viajaachina.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="viajaachina - Planificador gratis para viajar a China" />
@@ -43,6 +44,13 @@
           "price": "0",
           "priceCurrency": "USD"
         },
+        "featureList": [
+          "Itinerarios gratis para viajar a China",
+          "Mapa de ciudades y comparacion de transporte",
+          "Preparacion de pagos con Alipay y WeChat Pay",
+          "Checklist de visado, eSIM, VPN, apps y entradas",
+          "Cuenta para guardar favoritos, rutas y memoria de viaje"
+        ],
         "description": "Planificador gratis de viajes a China en español con rutas, ciudades, transporte, pagos, entradas y preparación."
       }
     </script>
@@ -66,6 +74,7 @@
               Mi Viaje
               <span id="tripHubCountTop">0</span>
             </button>
+            <button class="ghost-button" type="button" id="signOutTop">Salir</button>
             <button class="ghost-button" type="button" id="openLoginTop">Iniciar sesión</button>
             <button class="ghost-button" type="button" id="openRegisterTop">Registrarse</button>
             <button class="ghost-button" type="button" id="resetTop">Nuevo viaje</button>
@@ -147,7 +156,7 @@
         </div>
       </section>
 
-      <section class="destinations" aria-label="Destinos populares en China">
+      <section class="destinations" id="ciudades" aria-label="Destinos populares en China">
         <div class="section-heading destinations-heading">
           <p>Explora destinos</p>
           <h2>16 ciudades populares para tu ruta</h2>
@@ -155,7 +164,7 @@
         <div class="destination-grid" id="destinationGrid"></div>
       </section>
 
-      <section class="route-planner" aria-label="Mapa interactivo de ciudades">
+      <section class="route-planner" id="mapa" aria-label="Mapa interactivo de ciudades">
         <div class="section-heading">
           <p>Mapa de ruta</p>
           <h2>Elige varias ciudades para comparar transporte</h2>
@@ -178,7 +187,7 @@
         </div>
       </section>
 
-      <section class="prep-center" aria-label="Centro de preparacion antes de viajar">
+      <section class="prep-center" id="preparacion" aria-label="Centro de preparacion antes de viajar">
         <div class="section-heading">
           <p>Antes de viajar</p>
           <h2>Prepara tu viaje a China en 5 minutos</h2>
@@ -199,7 +208,7 @@
         </div>
       </section>
 
-      <section class="toolkit-section" aria-label="Herramientas practicas para viajar a China">
+      <section class="toolkit-section" id="herramientas" aria-label="Herramientas practicas para viajar a China">
         <div class="section-heading">
           <p>Herramientas practicas</p>
           <h2>Apps, webs y planes B que vas a necesitar</h2>
@@ -335,6 +344,47 @@
           </article>
         </div>
       </section>
+
+      <footer class="site-footer" aria-label="Informacion del sitio">
+        <div class="footer-brand">
+          <a class="brand" href="#">
+            <span class="brand-mark">中</span>
+            viajaachina
+          </a>
+          <p>
+            Planificador gratis en español para organizar viajes a China: ciudades, rutas,
+            pagos, transporte, entradas y preparacion practica.
+          </p>
+          <div class="footer-actions">
+            <button type="button" data-open-auth="signup">Crear cuenta gratis</button>
+            <button type="button" data-footer-trip>Ver Mi Viaje</button>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <section>
+            <h2>Planificar</h2>
+            <a href="#ciudades">Ciudades populares</a>
+            <a href="#mapa">Mapa de ruta</a>
+            <a href="#preparacion">Preparacion antes del viaje</a>
+            <a href="#herramientas">Apps y herramientas</a>
+          </section>
+          <section>
+            <h2>Cuenta</h2>
+            <button type="button" data-open-auth="signin">Iniciar sesion</button>
+            <button type="button" data-open-auth="signup">Registrarse gratis</button>
+            <span>Guarda favoritos, rutas, checklist y memoria personal.</span>
+          </section>
+          <section>
+            <h2>Legal</h2>
+            <span>Privacidad: usamos tu cuenta solo para guardar favoritos, rutas, checklist y memoria de viaje.</span>
+            <span>Terminos: viajaachina es una herramienta gratuita de planificacion, no una agencia de viajes.</span>
+            <a href="mailto:viajaachina@gmail.com">viajaachina@gmail.com</a>
+          </section>
+        </div>
+        <p class="footer-note">
+          © 2026 viajaachina. Informacion orientativa para viajeros hispanohablantes. Confirma visados, normas, horarios y reservas en canales oficiales antes de viajar.
+        </p>
+      </footer>
     </main>
 
     <script type="application/ld+json">
