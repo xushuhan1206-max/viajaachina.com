@@ -2377,6 +2377,10 @@ async function submitAuth(action) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) throw new Error(data.error || "No se pudo conectar la cuenta");
+    if (data.pendingConfirmation) {
+      if (authStatus) authStatus.textContent = data.message || "Cuenta creada. Revisa tu email y luego inicia sesión.";
+      return;
+    }
 
     state.session = data.session;
     window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state.session));

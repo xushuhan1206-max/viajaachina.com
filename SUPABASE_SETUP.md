@@ -48,6 +48,23 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 Do not put `SUPABASE_SERVICE_ROLE_KEY` in frontend code.
 `SUPABASE_ANON_KEY` is used by the Vercel auth route to call Supabase Auth.
 
+## 3.1 Supabase Auth Setting
+
+For the first public demo, the fastest setup is:
+
+Supabase Dashboard -> Authentication -> Providers -> Email
+
+- Enable Email provider.
+- For MVP testing, turn off `Confirm email` so users can register and immediately use the account.
+- If `Confirm email` stays on, viajaachina will show a message asking the user to confirm their email before signing in.
+
+If registration fails, check these first:
+
+- `/api/health` must show `hasSupabaseAnonKey: true`.
+- The password must have at least 6 characters.
+- The email must be new, or use `Iniciar sesión` instead of creating a duplicate account.
+- Local static preview with Python does not run Vercel API routes; test registration on Vercel or with a Vercel dev server.
+
 Keep existing:
 
 ```text

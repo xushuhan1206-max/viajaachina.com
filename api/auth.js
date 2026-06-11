@@ -64,6 +64,7 @@ export default async function handler(request, response) {
     headers: {
       ...jsonHeaders,
       apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
     },
     body: JSON.stringify({ email, password }),
   });
@@ -77,9 +78,11 @@ export default async function handler(request, response) {
   }
 
   if (!data?.access_token) {
-    return response.status(202).json({
-      ok: false,
-      error: "Revisa tu email para confirmar la cuenta y luego inicia sesión.",
+    return response.status(200).json({
+      ok: true,
+      pendingConfirmation: true,
+      user: data?.user ? { id: data.user.id, email: data.user.email } : { email },
+      message: "Cuenta creada. Revisa tu email para confirmar la cuenta y luego inicia sesión.",
     });
   }
 
