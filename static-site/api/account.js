@@ -7,6 +7,11 @@ function supabaseConfig() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !serviceKey || !anonKey) return null;
+  if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) {
+    const error = new Error("SUPABASE_URL must look like https://YOUR_PROJECT_ID.supabase.co. It is not the anon/publishable key.");
+    error.status = 500;
+    throw error;
+  }
   return { url: url.replace(/\/$/, ""), serviceKey, anonKey };
 }
 

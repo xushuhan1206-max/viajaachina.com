@@ -48,6 +48,12 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 Do not put `SUPABASE_SERVICE_ROLE_KEY` in frontend code.
 `SUPABASE_ANON_KEY` is used by the Vercel auth route to call Supabase Auth.
 
+Important:
+
+- `SUPABASE_URL` is the Project URL, for example `https://abcdefghijk.supabase.co`.
+- `SUPABASE_ANON_KEY` can start with `eyJ...` or `sb_publishable_...`.
+- Do not paste `sb_publishable_...` into `SUPABASE_URL`.
+
 ## 3.1 Supabase Auth Setting
 
 For the first public demo, the fastest setup is:
