@@ -2985,36 +2985,153 @@ button {
   }
 
   .topbar {
-    min-height: 66px;
+    min-height: 64px;
+    padding-top: 10px;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .brand {
     font-size: 0.95rem;
+    flex: 0 0 auto;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .nav-actions {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .free-nav-badge {
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 0.72rem;
+  }
+
+  .icon-button,
+  .ghost-button,
+  .trip-hub-button {
+    min-height: 34px;
+    border-radius: 7px;
+    font-size: 0.76rem;
   }
 
   .ghost-button {
-    padding: 0 12px;
+    padding: 0 9px;
+  }
+
+  .trip-hub-button {
+    padding: 0 9px;
+    gap: 6px;
+  }
+
+  .trip-hub-button span,
+  .trip-hub-fab strong {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.66rem;
+  }
+
+  .hero-content {
+    padding: 18px 0 30px;
+    gap: 18px;
+  }
+
+  .hero-copy {
+    max-width: 100%;
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.9rem, 15vw, 4.6rem);
+    font-size: clamp(2.45rem, 13vw, 3.9rem);
+    line-height: 0.98;
+  }
+
+  .hero-copy p:last-child {
+    margin-top: 12px;
+    font-size: 0.94rem;
+    line-height: 1.48;
+  }
+
+  .hero-trust-row {
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  .hero-trust-row span {
+    padding: 6px 8px;
+    font-size: 0.72rem;
   }
 
   .chat-panel {
-    min-height: 540px;
-    padding: 14px;
+    min-height: auto;
+    max-height: none;
+    padding: 12px;
+    grid-template-rows: auto minmax(150px, 24vh) auto auto;
+    gap: 10px;
   }
 
   .panel-header {
     align-items: flex-start;
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+
+  .panel-header h2,
+  .section-heading h2 {
+    font-size: 1rem;
+  }
+
+  .status-pill {
+    padding: 6px 8px;
+    font-size: 0.7rem;
   }
 
   .messages {
-    max-height: 350px;
+    min-height: 150px;
+    max-height: 24vh;
   }
 
   .message {
     max-width: 94%;
+    padding: 9px 10px;
+    font-size: 0.84rem;
+  }
+
+  .composer {
+    height: auto;
+    min-height: 44px;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 7px;
+  }
+
+  .composer input {
+    min-height: 44px;
+    padding: 0 11px;
+    font-size: 0.86rem;
+  }
+
+  .composer button {
+    min-height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .quick-replies {
+    min-height: 0;
+    gap: 7px;
+  }
+
+  .quick-replies button,
+  .ai-context-button {
+    min-height: 32px;
+    padding: 6px 9px;
+    font-size: 0.74rem;
+    line-height: 1.2;
   }
 
   .guide-grid,
@@ -3060,5 +3177,64 @@ button {
 
   .geo-city-marker text {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar,
+  .hero-content,
+  .workspace,
+  .seo-intro,
+  .seo-faq,
+  .destinations,
+  .route-planner,
+  .prep-center,
+  .toolkit-section,
+  .account-section,
+  .site-footer {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .free-nav-badge,
+  .icon-button {
+    display: none;
+  }
+
+  .ghost-button,
+  .trip-hub-button {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .hero-content {
+    padding-top: 12px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.25rem, 15vw, 3.35rem);
+  }
+
+  .chat-panel {
+    grid-template-rows: auto minmax(140px, 20vh) auto auto;
+  }
+
+  .messages {
+    min-height: 140px;
+    max-height: 20vh;
+  }
+
+  .quick-replies button {
+    flex: 1 1 calc(50% - 7px);
   }
 }
