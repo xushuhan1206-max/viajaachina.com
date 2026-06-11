@@ -2409,6 +2409,30 @@ button {
   margin-top: 18px;
 }
 
+.auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 18px;
+  border-radius: 8px;
+  padding: 5px;
+  background: #edf6f4;
+}
+
+.auth-switch button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--jade-dark);
+  background: transparent;
+  font-weight: 900;
+}
+
+.auth-switch button.is-active {
+  color: var(--white);
+  background: var(--jade);
+}
+
 .auth-form label {
   display: grid;
   gap: 7px;
@@ -2425,6 +2449,26 @@ button {
   color: var(--ink);
   background: var(--white);
   font: inherit;
+}
+
+.password-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.password-field button {
+  min-width: 76px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 8px;
+  color: var(--jade-dark);
+  background: #e7f4f1;
+  font-weight: 900;
+}
+
+.auth-helper {
+  color: var(--muted) !important;
+  font-size: 0.86rem;
 }
 
 .auth-form input:focus {

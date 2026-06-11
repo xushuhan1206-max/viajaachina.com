@@ -1304,6 +1304,7 @@ const openTripHubTop = document.querySelector("#openTripHubTop");
 const openTripHubFab = document.querySelector("#openTripHubFab");
 const tripHubCountTop = document.querySelector("#tripHubCountTop");
 const tripHubCountFab = document.querySelector("#tripHubCountFab");
+const openLoginTop = document.querySelector("#openLoginTop");
 const openRegisterTop = document.querySelector("#openRegisterTop");
 const registerModal = document.querySelector("#registerModal");
 const closeRegisterModal = document.querySelector("#closeRegisterModal");
@@ -1312,8 +1313,15 @@ const authForm = document.querySelector("#authForm");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
 const authConfirmPassword = document.querySelector("#authConfirmPassword");
+const authConfirmLabel = document.querySelector("#authConfirmLabel");
+const authModeSignup = document.querySelector("#authModeSignup");
+const authModeSignin = document.querySelector("#authModeSignin");
+const authSignupButton = document.querySelector("#authSignupButton");
 const authSigninButton = document.querySelector("#authSigninButton");
+const authHelper = document.querySelector("#authHelper");
 const authStatus = document.querySelector("#authStatus");
+const toggleAuthPassword = document.querySelector("#toggleAuthPassword");
+const toggleAuthConfirmPassword = document.querySelector("#toggleAuthConfirmPassword");
 const cityDrawer = document.querySelector("#cityDrawer");
 const cityDrawerContent = document.querySelector("#cityDrawerContent");
 const closeCityDrawer = document.querySelector("#closeCityDrawer");
@@ -1342,6 +1350,7 @@ let leafletGeoLayer = null;
 let leafletRouteLines = [];
 let activeTripHubTab = "summary";
 let accountCloudSaveTimer = null;
+let authMode = "signup";
 const markerLayers = new Map();
 
 function loadAccount() {
@@ -1787,9 +1796,27 @@ function showRegisterPrompt(reason) {
   }
 }
 
-function openRegisterInfo(reason = "top") {
+function setAuthMode(mode) {
+  authMode = mode === "signin" ? "signin" : "signup";
+  const isSignin = authMode === "signin";
+  if (authModeSignup) authModeSignup.classList.toggle("is-active", !isSignin);
+  if (authModeSignin) authModeSignin.classList.toggle("is-active", isSignin);
+  if (authConfirmLabel) authConfirmLabel.hidden = isSignin;
+  if (authConfirmPassword) authConfirmPassword.required = !isSignin;
+  if (authSignupButton) authSignupButton.textContent = isSignin ? "Iniciar sesión" : "Crear cuenta gratis";
+  if (authSigninButton) authSigninButton.textContent = isSignin ? "Crear cuenta gratis" : "Iniciar sesión";
+  if (authHelper) {
+    authHelper.textContent = isSignin
+      ? "¿Aún no tienes cuenta? Regístrate gratis para guardar tu viaje."
+      : "¿Ya tienes cuenta? Inicia sesión para recuperar tu viaje.";
+  }
+  if (authStatus) authStatus.textContent = "";
+}
+
+function openRegisterInfo(reason = "top", mode = "signup") {
   showRegisterPrompt(reason);
   if (!registerModal) return;
+  setAuthMode(mode);
   if (authEmail && state.account.email !== defaultAccount.email) authEmail.value = state.account.email;
   registerModal.classList.add("is-open");
   registerModal.setAttribute("aria-hidden", "false");
@@ -1799,6 +1826,13 @@ function closeRegisterInfo() {
   if (!registerModal) return;
   registerModal.classList.remove("is-open");
   registerModal.setAttribute("aria-hidden", "true");
+}
+
+function togglePasswordVisibility(input, button) {
+  if (!input || !button) return;
+  const shouldShow = input.type === "password";
+  input.type = shouldShow ? "text" : "password";
+  button.textContent = shouldShow ? "Ocultar" : "Ver";
 }
 
 function favoriteCityNames() {
@@ -4571,15 +4605,32 @@ if (signOutButton) signOutButton.addEventListener("click", signOut);
 if (authForm) {
   authForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitAuth("signup");
+    submitAuth(authMode);
   });
 }
-if (authSigninButton) authSigninButton.addEventListener("click", () => submitAuth("signin"));
+if (authModeSignup) authModeSignup.addEventListener("click", () => setAuthMode("signup"));
+if (authModeSignin) authModeSignin.addEventListener("click", () => setAuthMode("signin"));
+if (authSigninButton) {
+  authSigninButton.addEventListener("click", () => {
+    if (authMode === "signin") {
+      setAuthMode("signup");
+      return;
+    }
+    setAuthMode("signin");
+  });
+}
+if (toggleAuthPassword) toggleAuthPassword.addEventListener("click", () => togglePasswordVisibility(authPassword, toggleAuthPassword));
+if (toggleAuthConfirmPassword) {
+  toggleAuthConfirmPassword.addEventListener("click", () =>
+    togglePasswordVisibility(authConfirmPassword, toggleAuthConfirmPassword),
+  );
+}
 if (saveRouteButton) saveRouteButton.addEventListener("click", saveCurrentRoute);
 if (exportGuideButton) exportGuideButton.addEventListener("click", exportGuide);
 if (openTripHubTop) openTripHubTop.addEventListener("click", () => openTripHub("summary"));
 if (openTripHubFab) openTripHubFab.addEventListener("click", () => openTripHub("summary"));
-if (openRegisterTop) openRegisterTop.addEventListener("click", () => openRegisterInfo("top"));
+if (openLoginTop) openLoginTop.addEventListener("click", () => openRegisterInfo("top", "signin"));
+if (openRegisterTop) openRegisterTop.addEventListener("click", () => openRegisterInfo("top", "signup"));
 if (closeRegisterModal) closeRegisterModal.addEventListener("click", closeRegisterInfo);
 if (closeCityDrawer) closeCityDrawer.addEventListener("click", closeCityDetail);
 if (cityDrawerBackdrop) cityDrawerBackdrop.addEventListener("click", closeCityDetail);

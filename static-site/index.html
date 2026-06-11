@@ -66,6 +66,7 @@
               Mi Viaje
               <span id="tripHubCountTop">0</span>
             </button>
+            <button class="ghost-button" type="button" id="openLoginTop">Iniciar sesión</button>
             <button class="ghost-button" type="button" id="openRegisterTop">Registrarse</button>
             <button class="ghost-button" type="button" id="resetTop">Nuevo viaje</button>
           </div>
@@ -391,6 +392,10 @@
           Crea una cuenta gratis para conservar ciudades guardadas, preferencias,
           rutas, checklist y memoria personal del agente entre sesiones.
         </p>
+        <div class="auth-switch" role="tablist" aria-label="Acceso a cuenta">
+          <button class="is-active" id="authModeSignup" type="button">Registrarse</button>
+          <button id="authModeSignin" type="button">Iniciar sesión</button>
+        </div>
         <form class="auth-form" id="authForm">
           <label>
             Email
@@ -398,12 +403,19 @@
           </label>
           <label>
             Contraseña
-            <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required />
+            <span class="password-field">
+              <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required />
+              <button id="toggleAuthPassword" type="button">Ver</button>
+            </span>
           </label>
-          <label>
+          <label id="authConfirmLabel">
             Confirmar contraseña
-            <input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="6" required />
+            <span class="password-field">
+              <input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="6" required />
+              <button id="toggleAuthConfirmPassword" type="button">Ver</button>
+            </span>
           </label>
+          <p class="auth-helper" id="authHelper">¿Ya tienes cuenta? Inicia sesión para recuperar tu viaje.</p>
           <div class="auth-actions">
             <button class="primary-button" id="authSignupButton" type="submit">Crear cuenta gratis</button>
             <button class="secondary-button" id="authSigninButton" type="button">Iniciar sesión</button>

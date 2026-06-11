@@ -2,8 +2,15 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
+function normalizeSupabaseUrl(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\/rest\/v1\/?$/i, "")
+    .replace(/\/$/, "");
+}
+
 function supabaseConfig() {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) return null;
   if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) {
@@ -11,7 +18,7 @@ function supabaseConfig() {
     error.status = 500;
     throw error;
   }
-  return { url: url.replace(/\/$/, ""), anonKey };
+  return { url, anonKey };
 }
 
 async function readJson(response) {
@@ -26,6 +33,26 @@ async function readJson(response) {
 
 function cleanEmail(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function translateAuthError(message = "") {
+  const normalized = String(message).toLowerCase();
+  if (normalized.includes("user already registered") || normalized.includes("already registered")) {
+    return "Este email ya está registrado. Inicia sesión o usa otro email.";
+  }
+  if (normalized.includes("invalid login credentials")) {
+    return "Email o contraseña incorrectos.";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "Confirma tu email antes de iniciar sesión.";
+  }
+  if (normalized.includes("password")) {
+    return "La contraseña no cumple los requisitos. Usa al menos 6 caracteres.";
+  }
+  if (normalized.includes("rate limit")) {
+    return "Demasiados intentos. Espera un momento y vuelve a probar.";
+  }
+  return message || "No se pudo conectar la cuenta.";
 }
 
 function normalizeSession(data) {
@@ -91,9 +118,10 @@ export default async function handler(request, response) {
     const data = await readJson(authResponse);
 
     if (!authResponse.ok) {
+      const message = data?.msg || data?.message || data?.error_description || "Supabase auth failed";
       return response.status(authResponse.status).json({
         ok: false,
-        error: data?.msg || data?.message || data?.error_description || "Supabase auth failed",
+        error: translateAuthError(message),
       });
     }
 
