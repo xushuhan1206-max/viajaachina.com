@@ -2375,8 +2375,16 @@ async function submitAuth(action) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, email, password }),
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || "No se pudo conectar la cuenta");
+    const responseText = await response.text();
+    let data = {};
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+      data = { error: responseText };
+    }
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || `No se pudo conectar la cuenta (HTTP ${response.status})`);
+    }
     if (data.pendingConfirmation) {
       if (authStatus) authStatus.textContent = data.message || "Cuenta creada. Revisa tu email y luego inicia sesión.";
       return;

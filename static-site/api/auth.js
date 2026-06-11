@@ -24,11 +24,12 @@ function cleanEmail(value) {
 }
 
 function normalizeSession(data) {
-  const user = data.user || {};
+  const session = data.session || data;
+  const user = data.user || session.user || {};
   return {
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: data.expires_at,
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+    expiresAt: session.expires_at,
     user: {
       id: user.id,
       email: user.email,
@@ -77,7 +78,8 @@ export default async function handler(request, response) {
     });
   }
 
-  if (!data?.access_token) {
+  const session = normalizeSession(data);
+  if (!session.accessToken) {
     return response.status(200).json({
       ok: true,
       pendingConfirmation: true,
@@ -86,5 +88,5 @@ export default async function handler(request, response) {
     });
   }
 
-  return response.status(200).json({ ok: true, session: normalizeSession(data) });
+  return response.status(200).json({ ok: true, session });
 }
