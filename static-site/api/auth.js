@@ -24,6 +24,7 @@ function cleanEmail(value) {
 }
 
 function normalizeSession(data) {
+  if (!data || typeof data !== "object") return {};
   const session = data.session || data;
   const user = data.user || session.user || {};
   return {
@@ -37,56 +38,75 @@ function normalizeSession(data) {
   };
 }
 
+function requestBody(request) {
+  if (typeof request.body === "string") {
+    try {
+      return JSON.parse(request.body);
+    } catch (error) {
+      return {};
+    }
+  }
+  return request.body || {};
+}
+
 export default async function handler(request, response) {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    return response.status(405).json({ ok: false, error: "Method not allowed" });
-  }
+  try {
+    if (request.method !== "POST") {
+      response.setHeader("Allow", "POST");
+      return response.status(405).json({ ok: false, error: "Method not allowed" });
+    }
 
-  const config = supabaseConfig();
-  if (!config) {
-    return response.status(500).json({ ok: false, error: "SUPABASE_URL or SUPABASE_ANON_KEY is not configured" });
-  }
+    const config = supabaseConfig();
+    if (!config) {
+      return response.status(500).json({ ok: false, error: "SUPABASE_URL or SUPABASE_ANON_KEY is not configured" });
+    }
 
-  const { action, password } = request.body || {};
-  const email = cleanEmail(request.body?.email);
-  if (!["signup", "signin"].includes(action)) {
-    return response.status(400).json({ ok: false, error: "Invalid auth action" });
-  }
-  if (!email || !password || String(password).length < 6) {
-    return response.status(400).json({ ok: false, error: "Email and password are required" });
-  }
+    const body = requestBody(request);
+    const { action, password } = body;
+    const email = cleanEmail(body.email);
+    if (!["signup", "signin"].includes(action)) {
+      return response.status(400).json({ ok: false, error: "Invalid auth action" });
+    }
+    if (!email || !password || String(password).length < 6) {
+      return response.status(400).json({ ok: false, error: "Email and password are required" });
+    }
 
-  const endpoint =
-    action === "signup" ? `${config.url}/auth/v1/signup` : `${config.url}/auth/v1/token?grant_type=password`;
+    const endpoint =
+      action === "signup" ? `${config.url}/auth/v1/signup` : `${config.url}/auth/v1/token?grant_type=password`;
 
-  const authResponse = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      ...jsonHeaders,
-      apikey: config.anonKey,
-      Authorization: `Bearer ${config.anonKey}`,
-    },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await readJson(authResponse);
+    const authResponse = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        ...jsonHeaders,
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await readJson(authResponse);
 
-  if (!authResponse.ok) {
-    return response.status(authResponse.status).json({
+    if (!authResponse.ok) {
+      return response.status(authResponse.status).json({
+        ok: false,
+        error: data?.msg || data?.message || data?.error_description || "Supabase auth failed",
+      });
+    }
+
+    const session = normalizeSession(data);
+    if (!session.accessToken) {
+      return response.status(200).json({
+        ok: true,
+        pendingConfirmation: true,
+        user: data?.user ? { id: data.user.id, email: data.user.email } : { email },
+        message: "Cuenta creada. Revisa tu email para confirmar la cuenta y luego inicia sesión.",
+      });
+    }
+
+    return response.status(200).json({ ok: true, session });
+  } catch (error) {
+    return response.status(500).json({
       ok: false,
-      error: data?.msg || data?.message || "Supabase auth failed",
+      error: error instanceof Error ? error.message : "Auth function failed",
     });
   }
-
-  const session = normalizeSession(data);
-  if (!session.accessToken) {
-    return response.status(200).json({
-      ok: true,
-      pendingConfirmation: true,
-      user: data?.user ? { id: data.user.id, email: data.user.email } : { email },
-      message: "Cuenta creada. Revisa tu email para confirmar la cuenta y luego inicia sesión.",
-    });
-  }
-
-  return response.status(200).json({ ok: true, session });
 }

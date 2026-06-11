@@ -1311,6 +1311,7 @@ const registerToast = document.querySelector("#registerToast");
 const authForm = document.querySelector("#authForm");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
+const authConfirmPassword = document.querySelector("#authConfirmPassword");
 const authSigninButton = document.querySelector("#authSigninButton");
 const authStatus = document.querySelector("#authStatus");
 const cityDrawer = document.querySelector("#cityDrawer");
@@ -2362,8 +2363,13 @@ async function submitAuth(action) {
   if (!authEmail || !authPassword) return;
   const email = authEmail.value.trim();
   const password = authPassword.value;
+  const confirmPassword = authConfirmPassword?.value || "";
   if (!email || password.length < 6) {
     if (authStatus) authStatus.textContent = "Usa un email valido y una contraseña de al menos 6 caracteres.";
+    return;
+  }
+  if (action === "signup" && password !== confirmPassword) {
+    if (authStatus) authStatus.textContent = "Las contraseñas no coinciden.";
     return;
   }
 
